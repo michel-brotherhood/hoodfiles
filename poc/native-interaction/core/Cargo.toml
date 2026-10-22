@@ -1,0 +1,10 @@
+[package]
+name = "hf-poc-core"
+version = "0.0.1"
+edition = "2021"
+description = "Lógica portátil da prova HF-00: sessão de arraste, geometria do overlay e registro de entradas autorizadas"
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
