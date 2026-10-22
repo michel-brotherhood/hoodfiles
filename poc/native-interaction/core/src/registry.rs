@@ -203,10 +203,11 @@ mod tests {
     #[test]
     fn rejects_relative_missing_and_unknown_ids() {
         let mut r = Registry::new();
-        let out = r.add([
-            PathBuf::from("rel/x.png"),
-            PathBuf::from("/nonexistent/hf/zzz"),
-        ]);
+        // Absoluto em qualquer SO (no Windows "/x" não tem drive e não é absoluto).
+        let missing = std::env::temp_dir()
+            .join(format!("hf-poc-missing-{}", std::process::id()))
+            .join("zzz");
+        let out = r.add([PathBuf::from("rel/x.png"), missing]);
         assert_eq!(out.rejected[0].reason, Rejection::NotAbsolute);
         assert_eq!(out.rejected[1].reason, Rejection::NotFound);
         assert!(r.resolve("in_forged").is_none());
