@@ -26,7 +26,7 @@ check() { grep -q "$1" "$LOG" && echo "OK   $2" || { echo "FALHA $2"; cat "$LOG"
 
 # 1) Atalho + posicionamento (verificável aqui).
 xdotool mousemove 960 540
-xdotool key ctrl+alt+d; sleep 1
+xdotool key ctrl+alt+shift+d; sleep 1
 check overlay_shown "atalho mostra overlay"
 RECT=$(grep -m1 overlay_shown "$LOG" | python3 -c 'import sys,json;print(*json.loads(sys.stdin.read())["detail"]["rect"])')
 read -r X Y W H <<<"$RECT"
@@ -49,7 +49,7 @@ fi
 
 # 3) Escape (global) cancela: volta a Idle e testa de novo.
 xdotool key Escape; sleep 0.5
-xdotool key ctrl+alt+d; sleep 1
+xdotool key ctrl+alt+shift+d; sleep 1
 xdotool key Escape; sleep 1
 check 'cancelado: Escape' "Escape cancela o overlay"
 echo "Smoke Linux concluído (log: $LOG)"

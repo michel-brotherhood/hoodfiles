@@ -1,0 +1,83 @@
+name: HF-00 PoC
+
+# CI e compilação NÃO substituem os testes nativos (arraste no Explorer/Finder).
+# Os executáveis publicados são builds de teste SEM assinatura/notarização.
+on:
+  pull_request:
+    paths:
+      - "poc/native-interaction/**"
+      - ".github/workflows/hf-00-poc.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hf-00-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: poc/native-interaction
+
+jobs:
+  poc:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # windows-2025: x64 (docs "About GitHub-hosted runners"); macos-15: arm64 (M1).
+          - name: Windows x64
+            runner: windows-2025
+            target: x86_64-pc-windows-msvc
+            os_tag: windows-x64
+          - name: macOS Apple silicon
+            runner: macos-15
+            target: aarch64-apple-darwin
+            os_tag: macos-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirmar runner e arquitetura
+        run: |
+          rustup toolchain install stable --profile minimal -c rustfmt,clippy
+          rustup default stable
+          host=$(rustc -vV | sed -n 's/^host: //p')
+          echo "runner=${{ matrix.runner }} host=$host uname=$(uname -sm)"
+          [ "$host" = "${{ matrix.target }}" ] || { echo "::error::host $host != ${{ matrix.target }}"; exit 1; }
+          rustc -V; cargo -V
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            poc/native-interaction/target
+          key: poc-${{ matrix.os_tag }}-${{ hashFiles('poc/native-interaction/Cargo.lock') }}
+          restore-keys: poc-${{ matrix.os_tag }}-
+
+      - name: Formatação
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Testes do núcleo
+        run: cargo test --workspace --locked
+
+      - name: Build release (nativo)
+        run: cargo build --release -p hf-poc-app --locked
+
+      - name: Empacotar build de teste sem assinatura
+        run: scripts/package-ci.sh "${{ matrix.os_tag }}" "${GITHUB_SHA::7}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-poc-${{ matrix.os_tag }}-SEM-ASSINATURA-${{ github.sha }}
+          path: poc/native-interaction/dist/*
+          if-no-files-found: error
+          retention-days: 14

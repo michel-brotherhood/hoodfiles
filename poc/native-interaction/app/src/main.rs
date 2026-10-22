@@ -23,7 +23,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 const OVERLAY: &str = "overlay";
 const OVERLAY_LOGICAL: (u32, u32) = (320, 180);
 const OVERLAY_OFFSET: (i32, i32) = (16, 16);
-const DEFAULT_SHORTCUT: &str = "CommandOrControl+Alt+D";
+const DEFAULT_SHORTCUT: &str = "CommandOrControl+Alt+Shift+D";
 /// Rede de segurança: o overlay não fica preso se nada acontecer.
 const OVERLAY_TIMEOUT_SECS: u64 = 15;
 

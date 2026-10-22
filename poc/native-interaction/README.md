@@ -31,7 +31,7 @@ Variáveis (opcionais, defina antes do `cargo run`):
 
 | Variável | Valores | Efeito |
 | --- | --- | --- |
-| `HF_POC_SHORTCUT` | ex. `CommandOrControl+Alt+D` (padrão) | atalho que mostra o overlay |
+| `HF_POC_SHORTCUT` | ex. `CommandOrControl+Alt+Shift+D` (padrão) | atalho que mostra o overlay |
 | `HF_POC_MODE` | `toggle` (padrão) / `hold` | alternar ou manter pressionado |
 | `HF_POC_ESCAPE` | `global` (padrão) / `webview` | Escape registrado como atalho global só enquanto o overlay está visível, ou só pela webview |
 | `HF_POC_FOCUSABLE` | `1` (padrão) / `0` | overlay pode receber foco; `0` = janela não ativável |
@@ -39,6 +39,10 @@ Variáveis (opcionais, defina antes do `cargo run`):
 | `HF_POC_TRACE` | `1` | registra eventos `drag_over` |
 
 Windows (PowerShell): `$env:HF_POC_FOCUSABLE="0"; cargo run -p hf-poc-app`. macOS: `HF_POC_FOCUSABLE=0 cargo run -p hf-poc-app`.
+
+## CI e builds de teste sem assinatura
+
+`.github/workflows/hf-00-poc.yml` (PR e execução manual) roda em `windows-2025` (x64) e `macos-15` (Apple silicon/arm64): fmt, clippy `-D warnings`, testes do núcleo, build release e empacotamento. Falha se o host do Rust não for o esperado. Os artifacts (`...SEM-ASSINATURA...`, retenção 14 dias) **não são assinados nem notarizados**; no macOS o `.app` leva só assinatura ad-hoc (exigência do arm64). **CI verde só prova compilação e lógica portátil, não o fluxo nativo.** Roteiro curto de teste: `ROTEIRO-N03-N06.md`.
 
 ## Roteiro de teste manual
 
