@@ -174,7 +174,13 @@ mod tests {
     #[test]
     fn accepts_unicode_spaces_emoji_and_hides_full_path() {
         let d = tmp("uni");
-        let names = ["foto café 😀.png", "a b\"c'd;$(x).txt", "日本語.jpg"];
+        // Aspas duplas são inválidas em nomes de arquivo no Windows.
+        let hostile = if cfg!(windows) {
+            "a b'c;$(x).txt"
+        } else {
+            "a b\"c'd;$(x).txt"
+        };
+        let names = ["foto café 😀.png", hostile, "日本語.jpg"];
         let paths: Vec<_> = names
             .iter()
             .map(|n| {
@@ -213,6 +219,7 @@ mod tests {
         let f = d.join("a.png");
         fs::write(&f, b"x").unwrap();
         let mut r = Registry::new();
+        #[allow(unused_mut)] // o push do symlink só existe em unix
         let mut paths = vec![f.clone(), f.clone()];
         #[cfg(unix)]
         {
