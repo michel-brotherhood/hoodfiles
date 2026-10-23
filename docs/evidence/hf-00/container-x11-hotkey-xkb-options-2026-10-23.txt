@@ -1,0 +1,26 @@
+# SINTÉTICO: container Ubuntu 24.04, Xvfb+openbox+xdotool+setxkbmap. NÃO é Linux Mint. Gerado por poc/native-interaction/scripts/x11-hotkey-xkb-options.sh (app 958deec).
+# layouts br,us; 2026-10-23T16:26:21Z
+(nenhuma)                Control+Alt+Shift+KeyD   hotkey_raw=2
+(nenhuma)                Control+Alt+KeyH         hotkey_raw=2
+(nenhuma)                F9                       hotkey_raw=2
+grp:alt_shift_toggle     Control+Alt+Shift+KeyD   hotkey_raw=0
+grp:alt_shift_toggle     Control+Alt+KeyH         hotkey_raw=2
+grp:alt_shift_toggle     F9                       hotkey_raw=2
+grp:ctrl_shift_toggle    Control+Alt+Shift+KeyD   hotkey_raw=0
+grp:ctrl_shift_toggle    Control+Alt+KeyH         hotkey_raw=2
+grp:ctrl_shift_toggle    F9                       hotkey_raw=2
+grp:ctrl_alt_toggle      Control+Alt+Shift+KeyD   hotkey_raw=0
+grp:ctrl_alt_toggle      Control+Alt+KeyH         hotkey_raw=0
+grp:ctrl_alt_toggle      F9                       hotkey_raw=2
+grp:alt_space_toggle     Control+Alt+Shift+KeyD   hotkey_raw=2
+grp:alt_space_toggle     Control+Alt+KeyH         hotkey_raw=2
+grp:alt_space_toggle     F9                       hotkey_raw=2
+grp:win_space_toggle     Control+Alt+Shift+KeyD   hotkey_raw=2
+grp:win_space_toggle     Control+Alt+KeyH         hotkey_raw=2
+grp:win_space_toggle     F9                       hotkey_raw=2
+grp:shifts_toggle        Control+Alt+Shift+KeyD   hotkey_raw=2
+grp:shifts_toggle        Control+Alt+KeyH         hotkey_raw=2
+grp:shifts_toggle        F9                       hotkey_raw=2
+grp:caps_toggle          Control+Alt+Shift+KeyD   hotkey_raw=2
+grp:caps_toggle          Control+Alt+KeyH         hotkey_raw=2
+grp:caps_toggle          F9                       hotkey_raw=2

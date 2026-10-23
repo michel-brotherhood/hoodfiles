@@ -125,6 +125,45 @@ Hipóteses abertas, **nenhuma confirmada**: H1 thread de eventos morta; H2 mapea
 
 Variantes inofensivas para repetir (variável de ambiente do app, nada do Cinnamon muda): `HF_POC_SHORTCUT=F9`, `HF_POC_SHORTCUT=Control+Shift+F9`, `HF_POC_SHORTCUT=Alt+Shift+KeyD`. Verificação sintética (Xvfb): `hotkey_raw`, `overlay_probe` e os dois botões funcionam; isso **não** reproduz nem explica o relato do Mint.
 
+### 4.3 Relato 2 do Mint (build `958deec`): o botão abre o overlay, o atalho global não chega
+
+Relato preservado em `docs/evidence/hf-00/linux-mint-22.3-x11-relato-2-958deec.md` (e o relato 1 em `...relato-1-818d708.md`). Fatos: o botão "Testar overlay" abre o overlay (**a exibição funciona**); a webview vê `KeyD` com `ctrl`, `alt` e `shift` verdadeiros; **não há `hotkey_raw`**, ou seja, o handler do atalho global não é chamado. Restrição: o atalho **tem de ser global** (acionado durante o arraste no Nemo); substituí-lo por evento da webview não é opção.
+
+**Método.** Servidor X virtual (Xvfb 1920×1080 + openbox) no container Ubuntu 24.04, `xdotool`, `setxkbmap`, `xmodmap` e `xev`, app `958deec`. **Não é o Mint real.** Scripts versionados: `scripts/x11-hotkey-matrix.sh`, `scripts/x11-hotkey-xkb-options.sh`; saídas em `docs/evidence/hf-00/container-x11-hotkey-*.txt`. São diagnósticos (alguns casos falham por definição), não gates de CI.
+
+**Registro X11 e thread de eventos (`global-hotkey` 0.8.0).** O grab é `XGrabKey` na raiz com o modificador exato do atalho mais quatro variantes (`0`, `Mod2`=NumLock, `Lock`=CapsLock, `Mod2|Lock`); a thread de eventos compara `state & (Shift|Control|Mod1|Mod4)` com o atalho. Em todas as execuções do container a thread estava viva (`register_ms` entre 15 e 37 ms; eventos entregues quando o grab casava): **não observei thread morta**. Ela continua possível no Mint (H1) e é checada pelo `register_ms` do `startup` do responsável: ~0 ms indicaria thread morta, ~15–40 ms indica viva.
+
+**Resultados (contagem de `hotkey_raw` para uma pressão; 2 = Pressed+Released chegaram):**
+
+| Configuração do servidor de teste | Atalho `Ctrl+Alt+Shift+D` |
+| --- | --- |
+| `us`, sem locks / Num Lock / Caps Lock / Num+Caps ligados | **2** (grabs cobrem `Mod2` e `Lock`) |
+| `us`, Scroll Lock pressionado (keymap padrão não liga Scroll Lock a nenhum modificador; LED fica desligado) | **2** |
+| Scroll Lock mapeado em **`Mod3`** e ligado (`state` do X = `0x2d`) | **0**: a webview vê `ctrl/alt/shift = true`, o atalho global não chega. Desligado de volta: **2** |
+| `br,us` **sem** opção de troca de grupo; grupo 2 ativo | **2** (o layout, o grupo ativo e o keycode escolhido não são o problema) |
+| `br,us` **com** `grp:alt_shift_toggle` / `ctrl_shift_toggle` / `ctrl_alt_toggle` | **0** para o atalho padrão; `Control+Alt+H` falha **só** com `ctrl_alt_toggle` |
+| `grp:alt_space`, `win_space`, `shifts`, `caps` | **2** |
+
+Verificação causal do caso `Mod3` (fora do repositório, em cópia local de `global-hotkey` com `Mod3` acrescentado às variantes de grab): o atalho passou a chegar com Scroll Lock/`Mod3` ligado (0 → 1 evento) e o repositório **não foi alterado**.
+
+**Dois mecanismos reproduzidos, nenhum confirmado como o do responsável:**
+
+1. **Modificador extra no `state`** (ex.: `Mod3`): como o grab é por máscara exata, qualquer bit fora de `Shift/Control/Mod1/Mod4` + `Lock/Mod2` impede o casamento. Compatível com o relato (a webview vê os três modificadores, pois o GDK ignora `Mod3`; sem `hotkey_raw`). Não testei `Mod5` (AltGr) nem teclados reais.
+2. **Opção de troca de layout do XKB** cujo acorde coincide com os modificadores do atalho: ao completar o acorde o `state` perde um modificador (`0xc` em vez de `0xd`) e a webview também passa a ver um a menos. Isso **não** bate com o relato (a webview viu os três verdadeiros), então só vale para o responsável se o GDK dele se comportar de outro modo.
+
+**Hipóteses refutadas neste teste:** escolha do keycode (H3: o mesmo keycode 40/43 em `us`, `br,us` e `br(abnt2),us`); layout `br,us` por si só; grupo de layout ativo; Num/Caps Lock.
+
+**Dados que decidem o caso do responsável** (nada disso foi enviado ainda): `register_ms` do `startup`; saída de `./linux-key-probe.sh` (mostra o `state` real do X para o atalho e marca bits não cobertos); `setxkbmap -query` (opções `grp:*`); `xmodmap -pm` (o que está em `Mod3`/`Mod5`); e se o atalho passa a funcionar com Scroll Lock desligado.
+
+**Caminhos de correção, SEM aplicar (alteram dependências ou arquitetura e dependem de decisão):**
+
+| Caminho | O que resolve | Custo/risco |
+| --- | --- | --- |
+| A. Adaptador X11 próprio em `platform/linux.rs` (grab com `AnyModifier` e filtro no handler, ou todas as combinações de bits ignoráveis) | Mecanismo 1 e, com filtro por keycode, também o 2 | Nova dependência direta (`x11rb`) e código nativo por manter |
+| B. Cópia/patch do `global-hotkey` (variantes de grab com `Mod3`, opcionalmente `Mod5`) | Mecanismo 1 | Dependência modificada; manter ou subir upstream |
+| C. Trocar o atalho padrão no Linux para algo que não use acordes de troca de layout | Parte do mecanismo 2 | Não resolve `Mod3`; depende da configuração de cada usuário |
+| Descartado | Evento local da webview | Não funciona durante o arraste em outro aplicativo |
+
 ## 5. Matriz de testes nativos (preencher na máquina de destino)
 
 `PENDENTE` em todas as linhas. Variantes a repetir nos casos N03–N06 e N09: padrão; `HF_POC_FOCUSABLE=0`; `HF_POC_ESCAPE=webview`; `HF_POC_MODE=hold`.

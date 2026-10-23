@@ -1,0 +1,19 @@
+# SINTÉTICO: container Ubuntu 24.04, Xvfb+openbox+xdotool+setxkbmap. NÃO é Linux Mint. Gerado por poc/native-interaction/scripts/x11-hotkey-matrix.sh (app 958deec).
+# 2026-10-23T16:25:42Z  BIN=target/debug/hf-poc-app  keyboard: rules:      evdev model:      pc105 layout:     us 
+1. us, sem locks                                     hotkey_raw=2  state(tecla)=(consumido pelo grab)
+2. us, Num Lock LIGADO (Num Lock:    on)             hotkey_raw=2  state(tecla)=(consumido pelo grab)
+3. us, Caps Lock LIGADO                              hotkey_raw=2  state(tecla)=(consumido pelo grab)
+4. us, Scroll_Lock pressionado (keymap padrão: LED Scroll Lock: off, sem modificador) hotkey_raw=2  state(tecla)=(consumido pelo grab)
+4b. us, Scroll Lock DESLIGADO de novo                hotkey_raw=2  state(tecla)=(consumido pelo grab)
+5. us, Num+Caps+Scroll LIGADOS                       hotkey_raw=2  state(tecla)=(consumido pelo grab)
+6. Scroll_Lock mapeado em Mod3, LIGADO               hotkey_raw=0  state(tecla)=0x2d
+6b. Scroll_Lock mapeado em Mod3, DESLIGADO           hotkey_raw=2  state(tecla)=(consumido pelo grab)
+# br,us SEM opção de troca de grupo (controle) -> layout: br,us 
+7c. br,us sem grp:* — registro e teste sob br,us   hotkey_raw=2  state(tecla)=(consumido pelo grab)
+# br,us COM grp:alt_shift_toggle -> layout: br,us options: grp:alt_shift_toggle 
+7. br,us + alt_shift_toggle — grupo 1              hotkey_raw=0  state(tecla)=0xc
+8. br,us + alt_shift_toggle — grupo 2              hotkey_raw=0  state(tecla)=0xc
+# br(abnt2),us COM grp:alt_shift_toggle -> layout: br,us variant: abnt2, options: grp:alt_shift_toggle 
+9. br(abnt2),us + alt_shift_toggle — grupo 1       hotkey_raw=0  state(tecla)=0xc
+# registro sob us; depois liga alt_shift_toggle -> layout: us 
+11. app iniciado sob us; depois br,us + alt_shift_toggle hotkey_raw=0  state(tecla)=0xc
