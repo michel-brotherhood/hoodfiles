@@ -45,9 +45,20 @@ Electron não foi avaliado: não há bloqueio concreto (o ADR só pede comparaç
 | Formatação / lint | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets -- -D warnings` | sem diferenças / sem avisos |
 | Build do app (Linux/WebKitGTK 2.52.6) | `cargo build -p hf-poc-app` | OK |
 | Compilação para Windows | `cargo check -p hf-poc-app --target x86_64-pc-windows-msvc` | **OK (só type-check; não executa)** |
-| Compilação para macOS | `cargo check -p hf-poc-app --target aarch64-apple-darwin` | **NÃO EXECUTADO com sucesso**: o build script de `objc2-exception-helper` precisa de compilador Objective-C/SDK da Apple. `platform/macos.rs` foi conferido contra a fonte de `objc2-app-kit 0.3.2` (assinaturas de `setLevel`/`setCollectionBehavior`), mas **nunca foi compilado** |
+| Compilação para macOS (local) | `cargo check -p hf-poc-app --target aarch64-apple-darwin` | **NÃO EXECUTADO com sucesso aqui** (compilou no CI macOS, ver abaixo): o build script de `objc2-exception-helper` precisa de compilador Objective-C/SDK da Apple. `platform/macos.rs` foi conferido contra a fonte de `objc2-app-kit 0.3.2` |
 | Smoke Linux (Xvfb + openbox + xdotool) | `poc/native-interaction/scripts/linux-smoke.sh` | atalho mostra overlay: OK; overlay em 976,556 para cursor 960,540: OK; latência atalho→overlay ≈ 1 ms (medida no processo, sem repintura da webview); Escape global cancela: OK |
 | Arraste X11 real entre processos (fonte GTK → overlay) | mesmo script | **Não chegou** ao overlay nem à janela de diagnóstico. Controle: o mesmo arraste chega a um alvo GTK simples, então a ferramenta funciona. Causa não resolvida; hipótese: o mapeamento `info == 2` de wry 0.57 não casa com o alvo de DnD do WebKitGTK 2.52. Linux não é plataforma de produto, mas o resultado impede validar o recebimento ponta a ponta aqui |
+
+### CI (GitHub Actions, PR #1, run 3 no commit `1a3dd6d`)
+
+Workflow `.github/workflows/hf-00-poc.yml`; runners `windows-2025` (x64) e `macos-15` (Apple silicon/arm64), confirmados na documentação da GitHub e verificados no job (`rustc -vV` host = `x86_64-pc-windows-msvc` / `aarch64-apple-darwin`). Repositório privado: usa a franquia de minutos da conta, com macOS mais caro por minuto.
+
+| Job | Resultado | Observação |
+| --- | --- | --- |
+| Windows x64 | **verde** (fmt, clippy `-D warnings`, testes, build release, empacotamento) | 2 falhas reais encontradas e corrigidas antes: `unused_mut` em teste e dois testes que assumiam caminhos/nomes de unix |
+| macOS Apple silicon | **verde** (idem) | primeira compilação real de `platform/macos.rs`: passou |
+
+Artifacts `hf-poc-<plataforma>-SEM-ASSINATURA-<sha>` (14 dias): Windows `.exe`; macOS `.app` em `.tar.gz` com assinatura ad-hoc (exigência do arm64; **sem** assinatura de desenvolvedor nem notarização). **Isto prova compilação, lint e lógica portátil. Nenhum executável foi aberto, nem o fluxo de arraste testado, em Windows ou macOS.**
 
 Consequência: **nenhuma evidência de recebimento de caminhos de um arraste externo existe ainda, em nenhum SO.** O que foi provado é a lógica portátil, a compilação no Windows e o fluxo atalho→overlay→Escape no Linux.
 
@@ -94,5 +105,5 @@ Só aplicável se N03/N04 falharem num SO. Não é decisão tomada.
 ## 7. Próximo passo
 
 1. Responsável executa a matriz no Windows x64 e no macOS Apple silicon e anexa os JSONs em `docs/evidence/hf-00/`.
-2. Se `cargo build` falhar no macOS, o primeiro suspeito é `platform/macos.rs` (nunca compilado).
+2. Roteiro curto N03–N06: `poc/native-interaction/ROTEIRO-N03-N06.md` (vai dentro dos artifacts como `LEIA-ME.md`). `platform/macos.rs` compila no CI, mas nunca foi executado.
 3. Com N03–N06 aprovados em ambos, atualizar este relatório e a ADR-0001 e então liberar HF-01. Se falhar, escolher uma opção da seção 6.

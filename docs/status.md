@@ -54,3 +54,17 @@ Não executado e motivo: matriz N01-N20 (sem máquinas Windows/macOS); compilaç
 Riscos pendentes: R1-R6 em docs/poc-native-interaction.md; Escape global pode conflitar com o cancelamento do arraste; arquivos virtuais sem caminho
 Próxima tarefa elegível: executar a matriz nos dois SOs; HF-01 depende disso
 ```
+
+### 2026-10-23 — HF-00: CI e builds de teste
+
+```text
+Tarefa: CI nativo + artifacts + roteiro N03-N06
+Estado: em andamento (gate continua BLOQUEADO)
+Alterações: .github/workflows/hf-00-poc.yml; scripts/package-ci.sh; ROTEIRO-N03-N06.md; atalho padrão Ctrl/Cmd+Alt+Shift+D (Cmd+Option+D esconde o Dock no macOS); correções de testes do núcleo no Windows
+Comandos e resultados: PR #1, run 3 (commit 1a3dd6d): Windows x64 (windows-2025) verde; macOS arm64 (macos-15) verde — fmt, clippy -D warnings, testes, build release, empacotamento. Runs 1-2 falharam no Windows por problemas reais nos testes (unused_mut; nome com aspas e caminho "/x" não absoluto), corrigidos.
+Artifacts: hf-poc-windows-x64 e hf-poc-macos-arm64 (SEM ASSINATURA; 14 dias)
+Testes nativos por SO: Windows PENDENTE; macOS PENDENTE (nenhum executável foi executado; CI não substitui)
+Não executado e motivo: N01-N20 e N03-N06 (dependem de máquina real e pessoa arrastando)
+Riscos pendentes: inalterados (R1-R6 em docs/poc-native-interaction.md); conflitos do novo atalho não verificados (N11)
+Próxima tarefa elegível: responsável executa ROTEIRO-N03-N06.md em ambos os sistemas
+```

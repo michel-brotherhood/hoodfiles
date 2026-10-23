@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Em pull_request, GITHUB_SHA é o commit de merge temporário; o rastreável é o head do PR.
+  HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 concurrency:
   group: hf-00-poc-${{ github.ref }}
   cancel-in-progress: true
@@ -73,11 +77,11 @@ jobs:
         run: cargo build --release -p hf-poc-app --locked
 
       - name: Empacotar build de teste sem assinatura
-        run: scripts/package-ci.sh "${{ matrix.os_tag }}" "${GITHUB_SHA::7}"
+        run: scripts/package-ci.sh "${{ matrix.os_tag }}" "${HEAD_SHA::7}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hf-poc-${{ matrix.os_tag }}-SEM-ASSINATURA-${{ github.sha }}
+          name: hf-poc-${{ matrix.os_tag }}-SEM-ASSINATURA-${{ env.HEAD_SHA }}
           path: poc/native-interaction/dist/*
           if-no-files-found: error
           retention-days: 14
