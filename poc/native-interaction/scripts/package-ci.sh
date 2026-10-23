@@ -27,7 +27,7 @@ case "$OS" in
         printf '%-34s %s\n' "$lib" "${pkg:-?}"
       done
     } > "$OUT/DEPENDENCIAS-RUNTIME.txt"
-    cp scripts/linux-run-checks.sh "$OUT/"
+    cp scripts/linux-run-checks.sh scripts/linux-key-probe.sh "$OUT/"
     tar -C dist -czf "dist/hf-poc-linux-x64-$SHA.tar.gz" "hf-poc-$OS-$SHA"
     rm -rf "$OUT"
     (cd dist && sha256sum "hf-poc-linux-x64-$SHA.tar.gz" > SHA256SUMS.txt)

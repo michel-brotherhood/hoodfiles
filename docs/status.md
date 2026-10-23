@@ -96,3 +96,16 @@ Testes nativos por SO: Windows PENDENTE; macOS PENDENTE; Linux Mint PARCIAL (22.
 Riscos pendentes: atalho global pode não funcionar no Mint real; sessão Wayland não avaliada
 Próxima tarefa elegível: responsável roda o novo artifact Linux e envia o relatório JSON e a saída de linux-run-checks.sh (roteiro, seção 4b)
 ```
+
+### 2026-10-23 — HF-00: Mint 22.3, build 958deec — botão abre o overlay, atalho global não chega
+
+```text
+Tarefa: investigar o registro X11 e a thread de eventos do global-hotkey; reproduzir com Scroll Lock e layouts br,us
+Estado: em andamento (gate BLOQUEADO; exige Windows, macOS e Linux Mint)
+Relato (responsável): Mint 22.3 Cinnamon/X11, build 958deec: o botão "Testar overlay" abre o overlay; a webview registra KeyD com ctrl/alt/shift = true; não há hotkey_raw. Preservado em docs/evidence/hf-00/linux-mint-22.3-x11-relato-{1-818d708,2-958deec}.md (não editar).
+Decisões e evidências: a EXIBIÇÃO do overlay funciona no Mint; o defeito está na CAPTURA do atalho global. Reproduzido no X11 virtual (NÃO Mint): (1) modificador extra no state (Scroll Lock em Mod3) impede o grab; com Mod3 adicionado às variantes de grab em cópia local de global-hotkey o atalho volta; (2) opções grp:* do XKB cujo acorde coincide com os modificadores do atalho fazem o state perder um modificador. Refutado no teste: escolha de keycode, layout br,us em si, grupo ativo, Num/Caps Lock; thread de eventos viva em todas as execuções. Causa no Mint NÃO identificada. Atalho local da webview descartado (precisa funcionar durante o arraste no Nemo). Nenhuma dependência nem configuração do Cinnamon alterada.
+Comandos e resultados (container): scripts/x11-hotkey-matrix.sh e x11-hotkey-xkb-options.sh; saídas em docs/evidence/hf-00/container-x11-hotkey-*.txt
+Testes nativos por SO: Windows PENDENTE; macOS PENDENTE; Linux Mint PARCIAL (22.3/X11: exibição ok, atalho global sem efeito, arraste NÃO testado)
+Riscos pendentes: atalho global pode depender da configuração de teclado do usuário (modificadores extras, opções grp:*); correção exige decisão (adaptador X11 próprio ou patch do global-hotkey)
+Próxima tarefa elegível: responsável envia register_ms, saída de ./linux-key-probe.sh e setxkbmap -query/xmodmap -pm (roteiro 4b, item 5)
+```

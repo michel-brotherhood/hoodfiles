@@ -53,6 +53,11 @@ Windows (PowerShell): `$env:HF_POC_FOCUSABLE="0"; cargo run -p hf-poc-app`. macO
 4. Clique em **Copiar relatório (JSON)** e cole em `docs/evidence/hf-00/<so>-<data>.json` (ou anexe o `poc-log.jsonl` indicado na barra superior). O log contém nomes de exibição, nunca caminhos completos.
 5. Registre se algum diálogo de permissão apareceu (macOS: Acessibilidade/Monitoramento de Entrada; Windows: SmartScreen/firewall) e a ação exata.
 
+## Diagnóstico do atalho global no Linux (X11)
+
+- `scripts/linux-key-probe.sh`: roda no **Mint real**; mostra o `state` que o X entrega para o atalho e marca bits que o `global-hotkey` não cobre.
+- `scripts/x11-hotkey-matrix.sh` e `scripts/x11-hotkey-xkb-options.sh`: reproduzem, em servidor X virtual, o efeito de locks, `Mod3` e opções `grp:*` do XKB (não são gates de CI). Resultados e leitura em `docs/poc-native-interaction.md`, seção 4.3.
+
 ## Smoke Linux (Xvfb; não é o Mint real)
 
 `scripts/linux-smoke.sh` (precisa de `xvfb xdotool openbox python3-gi` e das libs do Tauri). Verifica atalho, posição do overlay, arraste X11 entre processos (fonte GTK → overlay; até 3 tentativas, ver investigação em `docs/poc-native-interaction.md`) e Escape. Roda em container Ubuntu com servidor X virtual e arraste sintético (xdotool): **não comprova** o comportamento em Linux Mint com Nemo, nem em sessão Wayland.

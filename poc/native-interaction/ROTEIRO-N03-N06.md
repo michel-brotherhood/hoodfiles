@@ -42,7 +42,8 @@ Pare e anote exatamente o ponto se algo falhar (ex.: “atalho não disparou com
 2. Rode `./linux-run-checks.sh` (Linux) e guarde a saída: mostra mapa de modificadores e teclas.
 3. Com o atalho, olhe na tabela: `hotkey_raw` (o atalho global chegou?), `webview_key` (clique na janela de diagnóstico e pressione o atalho: o que o WebKit vê), `window_error`/`hotkey_error` e `overlay_probe`.
 4. Variantes do atalho (só variável de ambiente do app): `HF_POC_SHORTCUT=F9 ./hf-poc-app`, depois `Control+Shift+F9` e `Alt+Shift+KeyD`.
-5. Copie o relatório JSON e a saída do `linux-run-checks.sh` para o PR. Interpretação em `docs/poc-native-interaction.md`, seção 4.2.
+5. **Se `hotkey_raw` não aparece** (caso do Mint 22.3): rode `./linux-key-probe.sh`, clique na janela do xev e pressione o atalho várias vezes, com Scroll Lock ligado e desligado. Ele mostra o `state` real que o X entrega e marca com `ATENÇÃO` qualquer bit que o `global-hotkey` não cobre (ex.: Scroll Lock em `Mod3`). Informe também o valor `register_ms` do evento `startup` (≈0 ms sugere thread de eventos morta; ≈15–40 ms, viva) e `setxkbmap -query` (opções `grp:*`).
+6. Copie o relatório JSON e a saída do `linux-run-checks.sh` e do `linux-key-probe.sh` para o PR. Interpretação em `docs/poc-native-interaction.md`, seção 4.2.
 
 ## 5. Variantes (só se N03 ou N04 falharem)
 No Terminal/PowerShell, defina antes de abrir o executável: `HF_POC_FOCUSABLE=0` (Linux: `HF_POC_FOCUSABLE=0 ./hf-poc-app`). Windows (PowerShell): `$env:HF_POC_FOCUSABLE="0"; .\hf-poc-app.exe`. macOS: `HF_POC_FOCUSABLE=0 HoodFilesPoC.app/Contents/MacOS/hf-poc-app`. Repita N03–N06 e anote a diferença.
