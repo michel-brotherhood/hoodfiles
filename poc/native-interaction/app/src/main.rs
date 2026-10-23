@@ -58,6 +58,8 @@ struct Shared {
     log_file: Option<PathBuf>,
     t0: Instant,
     shortcut_t: Option<Instant>,
+    /// Escape global só é desregistrado se o registro deu certo.
+    escape_registered: bool,
 }
 
 type State_ = Mutex<Shared>;
@@ -80,6 +82,26 @@ impl Shared {
         }
         let _ = app.emit_to("main", "poc:event", &e);
         self.log.push(e);
+    }
+}
+
+/// Registra um evento se o estado compartilhado já existe (o handler do atalho pode disparar cedo);
+/// sem estado, cai no stderr para não perder a pista.
+fn rec(app: &tauri::AppHandle, kind: &str, detail: Value) {
+    match app.try_state::<State_>() {
+        Some(st) => st.lock().unwrap().record(app, kind, detail),
+        None => eprintln!("[poc] {kind}: {detail}"),
+    }
+}
+
+/// Operações de janela do Tauri devolvem `Result`; ignorá-las esconde falhas do gerenciador de janelas.
+fn win_op(app: &tauri::AppHandle, op: &str, r: tauri::Result<()>) {
+    if let Err(e) = r {
+        rec(
+            app,
+            "window_error",
+            json!({"op": op, "error": e.to_string()}),
+        );
     }
 }
 
@@ -108,8 +130,11 @@ fn parse_config() -> Result<Config, String> {
     })
 }
 
-fn monitors_core(w: &WebviewWindow) -> (Vec<Monitor>, Value) {
-    let ms = w.available_monitors().unwrap_or_default();
+fn monitors_core(w: &WebviewWindow) -> (Vec<Monitor>, Value, Option<String>) {
+    let (ms, err) = match w.available_monitors() {
+        Ok(ms) => (ms, None),
+        Err(e) => (Vec::new(), Some(e.to_string())),
+    };
     let core: Vec<Monitor> = ms
         .iter()
         .map(|m| {
@@ -135,7 +160,7 @@ fn monitors_core(w: &WebviewWindow) -> (Vec<Monitor>, Value) {
             "scale": m.scale_factor() })
         })
         .collect::<Vec<_>>());
-    (core, desc)
+    (core, desc, err)
 }
 
 /// Executa as ações da máquina de estados. Chamado com o lock já liberado quando possível.
@@ -145,11 +170,23 @@ fn run_actions(app: &tauri::AppHandle, actions: Vec<Action>, dropped: Option<Vec
             // Janelas e NSWindow só na thread principal; o handler de atalho pode rodar fora dela.
             Action::ShowOverlay => {
                 let a = app.clone();
-                let _ = app.run_on_main_thread(move || show_overlay(&a));
+                if let Err(e) = app.run_on_main_thread(move || show_overlay(&a)) {
+                    rec(
+                        app,
+                        "window_error",
+                        json!({"op": "run_on_main_thread(show_overlay)", "error": e.to_string()}),
+                    );
+                }
             }
             Action::HideOverlay => {
                 let a = app.clone();
-                let _ = app.run_on_main_thread(move || hide_overlay(&a));
+                if let Err(e) = app.run_on_main_thread(move || hide_overlay(&a)) {
+                    rec(
+                        app,
+                        "window_error",
+                        json!({"op": "run_on_main_thread(hide_overlay)", "error": e.to_string()}),
+                    );
+                }
             }
             Action::AcceptDrop => {
                 let paths = dropped.clone().unwrap_or_default();
@@ -182,12 +219,19 @@ fn run_actions(app: &tauri::AppHandle, actions: Vec<Action>, dropped: Option<Vec
 
 fn show_overlay(app: &tauri::AppHandle) {
     let Some(w) = app.get_webview_window(OVERLAY) else {
+        rec(
+            app,
+            "error",
+            json!({"msg": "janela do overlay não encontrada"}),
+        );
         return;
     };
     let cfg = app.state::<Config>();
     let started = app.state::<State_>().lock().unwrap().shortcut_t;
-    let cursor = w.cursor_position().ok();
-    let (mons, mons_desc) = monitors_core(&w);
+    let cursor_res = w.cursor_position();
+    let cursor_err = cursor_res.as_ref().err().map(|e| e.to_string());
+    let cursor = cursor_res.ok();
+    let (mons, mons_desc, mons_err) = monitors_core(&w);
     let placed = cursor.and_then(|c| {
         place_overlay(
             (c.x.round() as i32, c.y.round() as i32),
@@ -197,18 +241,50 @@ fn show_overlay(app: &tauri::AppHandle) {
         )
     });
     let Some(r) = placed else {
-        app.state::<State_>().lock().unwrap().record(app, "error", json!({"msg": "sem cursor/monitores; overlay não posicionado", "cursor": cursor.map(|c| [c.x, c.y])}));
+        app.state::<State_>().lock().unwrap().record(app, "error", json!({"msg": "sem cursor/monitores; overlay não posicionado", "cursor": cursor.map(|c| [c.x, c.y]),
+            "cursor_error": cursor_err, "monitors_error": mons_err, "monitors_found": mons.len()}));
         return;
     };
-    let _ = w.set_size(PhysicalSize::new(r.w, r.h));
-    let _ = w.set_position(PhysicalPosition::new(r.x, r.y));
-    let _ = w.show();
-    let _ = w.set_always_on_top(true);
+    win_op(app, "set_size", w.set_size(PhysicalSize::new(r.w, r.h)));
+    win_op(
+        app,
+        "set_position",
+        w.set_position(PhysicalPosition::new(r.x, r.y)),
+    );
+    win_op(app, "show", w.show());
+    win_op(app, "set_always_on_top", w.set_always_on_top(true));
     // Nunca pedir foco: roubar o foco da origem pode encerrar o arraste (hipótese a medir).
     let ms = started.map(|t| t.elapsed().as_secs_f64() * 1000.0);
     if cfg.escape == EscapeStrategy::Global {
-        let _ = app.global_shortcut().register("Escape");
+        match app.global_shortcut().register("Escape") {
+            Ok(()) => app.state::<State_>().lock().unwrap().escape_registered = true,
+            Err(e) => rec(
+                app,
+                "hotkey_error",
+                json!({"op": "register(Escape)", "error": e.to_string()}),
+            ),
+        }
     }
+    // O que o gerenciador de janelas realmente fez (pode ignorar posição/tamanho, ex.: Wayland).
+    // Lido 300 ms depois: logo após show() o servidor gráfico ainda não mapeou a janela (valores enganosos).
+    let probe_app = app.clone();
+    let expected = [r.x, r.y, r.w as i32, r.h as i32];
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let Some(w) = probe_app.get_webview_window(OVERLAY) else {
+            return;
+        };
+        rec(
+            &probe_app,
+            "overlay_probe",
+            json!({
+                "expected_rect": expected,
+                "visible": w.is_visible().map_err(|e| e.to_string()).ok(),
+                "outer_position": w.outer_position().ok().map(|p| [p.x, p.y]),
+                "outer_size": w.outer_size().ok().map(|s| [s.width, s.height]),
+            }),
+        );
+    });
     let gen = {
         let state = app.state::<State_>();
         let mut s = state.lock().unwrap();
@@ -218,7 +294,8 @@ fn show_overlay(app: &tauri::AppHandle) {
             "overlay_shown",
             json!({
             "cursor": cursor.map(|c| [c.x, c.y]), "rect": [r.x, r.y, r.w, r.h],
-            "monitors": mons_desc, "shortcut_to_shown_ms": ms, "focusable": cfg.focusable }),
+            "monitors": mons_desc, "monitors_error": mons_err, "cursor_error": cursor_err,
+            "shortcut_to_shown_ms": ms, "focusable": cfg.focusable }),
         );
         s.generation
     };
@@ -240,9 +317,19 @@ fn show_overlay(app: &tauri::AppHandle) {
 
 fn hide_overlay(app: &tauri::AppHandle) {
     if let Some(w) = app.get_webview_window(OVERLAY) {
-        let _ = w.hide();
+        win_op(app, "hide", w.hide());
     }
-    let _ = app.global_shortcut().unregister("Escape");
+    let was_registered =
+        std::mem::take(&mut app.state::<State_>().lock().unwrap().escape_registered);
+    if was_registered {
+        if let Err(e) = app.global_shortcut().unregister("Escape") {
+            rec(
+                app,
+                "hotkey_error",
+                json!({"op": "unregister(Escape)", "error": e.to_string()}),
+            );
+        }
+    }
     app.state::<State_>()
         .lock()
         .unwrap()
@@ -295,6 +382,41 @@ fn overlay_cancel(webview: tauri::Webview, app: tauri::AppHandle) -> Result<(), 
     Ok(())
 }
 
+/// Abre o overlay pelo MESMO caminho do atalho (máquina de estados -> run_on_main_thread -> show_overlay),
+/// sem passar pelo teclado: separa "captura do atalho" de "exibição do painel".
+/// `async` para rodar fora da thread principal, como o handler do atalho global.
+#[tauri::command]
+async fn test_overlay(webview: tauri::Webview, app: tauri::AppHandle) -> Result<(), String> {
+    if webview.label() != "main" {
+        return Err("negado".into());
+    }
+    rec(&app, "ui_test_overlay", json!({"action": "open"}));
+    dispatch(&app, Event::ShortcutPressed, None);
+    Ok(())
+}
+
+/// Fecha o overlay sem depender do teclado (útil quando a captura de teclas é justamente o problema).
+#[tauri::command]
+async fn test_overlay_close(webview: tauri::Webview, app: tauri::AppHandle) -> Result<(), String> {
+    if webview.label() != "main" {
+        return Err("negado".into());
+    }
+    rec(&app, "ui_test_overlay", json!({"action": "close"}));
+    dispatch(&app, Event::EscapePressed, None);
+    Ok(())
+}
+
+/// Teclas vistas PELA WEBVIEW da janela de diagnóstico (não pelo atalho global). Só combinações com
+/// Ctrl/Alt/Meta e as próprias teclas modificadoras: texto digitado normalmente não é registrado.
+#[tauri::command]
+fn log_key(webview: tauri::Webview, app: tauri::AppHandle, key: Value) -> Result<(), String> {
+    if webview.label() != "main" {
+        return Err("negado".into());
+    }
+    rec(&app, "webview_key", key);
+    Ok(())
+}
+
 fn main() {
     let cfg = match parse_config() {
         Ok(c) => c,
@@ -312,11 +434,32 @@ fn main() {
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, sc, ev| {
+                    // Primeiro de tudo: prova de que o handler foi chamado, antes de qualquer comparação.
+                    let state_txt = match ev.state() {
+                        ShortcutState::Pressed => "Pressed",
+                        ShortcutState::Released => "Released",
+                    };
+                    let th = std::thread::current();
+                    rec(
+                        app,
+                        "hotkey_raw",
+                        json!({
+                            "event_id": ev.id(), "state": state_txt,
+                            "shortcut": format!("{sc:?}"), "shortcut_id": sc.id(),
+                            "is_main": *sc == main_shortcut, "is_escape": *sc == escape_shortcut,
+                            "thread": th.name().unwrap_or("(sem nome)"),
+                        }),
+                    );
                     let ev_kind = if *sc == main_shortcut {
-                        match ev.state() { ShortcutState::Pressed => Event::ShortcutPressed, ShortcutState::Released => Event::ShortcutReleased }
+                        match ev.state() {
+                            ShortcutState::Pressed => Event::ShortcutPressed,
+                            ShortcutState::Released => Event::ShortcutReleased,
+                        }
                     } else if *sc == escape_shortcut && ev.state() == ShortcutState::Pressed {
                         Event::EscapePressed
-                    } else { return };
+                    } else {
+                        return;
+                    };
                     dispatch(app, ev_kind, None);
                 })
                 .build(),
@@ -324,18 +467,33 @@ fn main() {
         .manage(cfg)
         .setup(move |app| {
             let platform_notes = platform::configure_app(app);
-            let log_file = app.path().app_local_data_dir().ok().map(|d| { let _ = std::fs::create_dir_all(&d); d.join("poc-log.jsonl") });
+            let log_file = app.path().app_local_data_dir().ok().map(|d| {
+                let _ = std::fs::create_dir_all(&d);
+                d.join("poc-log.jsonl")
+            });
             app.manage(Mutex::new(Shared {
-                session: Session::new(mode), registry: Registry::new(), generation: 0,
-                log: vec![], log_file, t0: Instant::now(), shortcut_t: None,
+                session: Session::new(mode),
+                registry: Registry::new(),
+                generation: 0,
+                log: vec![],
+                log_file,
+                t0: Instant::now(),
+                shortcut_t: None,
+                escape_registered: false,
             }));
-            let overlay = WebviewWindowBuilder::new(app, OVERLAY, WebviewUrl::App("overlay.html".into()))
-                .title("HoodFiles PoC overlay")
-                .inner_size(OVERLAY_LOGICAL.0 as f64, OVERLAY_LOGICAL.1 as f64)
-                .decorations(false).resizable(false).skip_taskbar(true).always_on_top(true)
-                .visible(false).focused(false).focusable(focusable)
-                .visible_on_all_workspaces(true)
-                .build()?;
+            let overlay =
+                WebviewWindowBuilder::new(app, OVERLAY, WebviewUrl::App("overlay.html".into()))
+                    .title("HoodFiles PoC overlay")
+                    .inner_size(OVERLAY_LOGICAL.0 as f64, OVERLAY_LOGICAL.1 as f64)
+                    .decorations(false)
+                    .resizable(false)
+                    .skip_taskbar(true)
+                    .always_on_top(true)
+                    .visible(false)
+                    .focused(false)
+                    .focusable(focusable)
+                    .visible_on_all_workspaces(true)
+                    .build()?;
             let mut notes = platform_notes;
             notes.extend(platform::configure_overlay(&overlay));
 
@@ -346,18 +504,37 @@ fn main() {
                 match d {
                     DragDropEvent::Enter { paths, .. } => {
                         // Evidência-chave: o SO entrega os caminhos já na entrada do arraste?
-                        let names: Vec<String> = paths.iter().map(|p| hf_poc_core::registry::display_name(p)).collect();
-                        handle.state::<State_>().lock().unwrap().record(&handle, "drag_enter", json!({"count": paths.len(), "names": names}));
+                        let names: Vec<String> = paths
+                            .iter()
+                            .map(|p| hf_poc_core::registry::display_name(p))
+                            .collect();
+                        handle.state::<State_>().lock().unwrap().record(
+                            &handle,
+                            "drag_enter",
+                            json!({"count": paths.len(), "names": names}),
+                        );
                         dispatch(&handle, Event::DragEntered { count: paths.len() }, None);
                     }
                     DragDropEvent::Over { position } => {
                         if std::env::var("HF_POC_TRACE").as_deref() == Ok("1") {
-                            handle.state::<State_>().lock().unwrap().record(&handle, "drag_over", json!({"pos": [position.x, position.y]}));
+                            handle.state::<State_>().lock().unwrap().record(
+                                &handle,
+                                "drag_over",
+                                json!({"pos": [position.x, position.y]}),
+                            );
                         }
                     }
-                    DragDropEvent::Drop { paths, .. } => dispatch(&handle, Event::Dropped { count: paths.len() }, Some(paths.clone())),
+                    DragDropEvent::Drop { paths, .. } => dispatch(
+                        &handle,
+                        Event::Dropped { count: paths.len() },
+                        Some(paths.clone()),
+                    ),
                     DragDropEvent::Leave => {
-                        handle.state::<State_>().lock().unwrap().record(&handle, "drag_leave", json!({}));
+                        handle.state::<State_>().lock().unwrap().record(
+                            &handle,
+                            "drag_leave",
+                            json!({}),
+                        );
                         dispatch(&handle, Event::DragLeft, None);
                     }
                     _ => {}
@@ -376,22 +553,41 @@ fn main() {
                         DragDropEvent::Leave => ("main_drag_leave", 0),
                         _ => return,
                     };
-                    h.state::<State_>().lock().unwrap().record(&h, kind, json!({"count": n}));
+                    h.state::<State_>()
+                        .lock()
+                        .unwrap()
+                        .record(&h, kind, json!({"count": n}));
                 });
             }
 
             let sc = app.state::<Config>().shortcut;
             let text = app.state::<Config>().shortcut_text.clone();
+            let reg_t = Instant::now();
             let reg = app.global_shortcut().register(sc);
+            let register_ms = reg_t.elapsed().as_secs_f64() * 1000.0;
             let state = app.state::<State_>();
             let mut s = state.lock().unwrap();
             let h = app.handle().clone();
-            s.record(&h, "startup", json!({
-                "shortcut": text, "registered": reg.is_ok(), "register_error": reg.err().map(|e| e.to_string()),
-                "env": platform::env_info(), "platform_notes": notes, "tauri": tauri::VERSION }));
+            s.record(
+                &h,
+                "startup",
+                json!({
+                "shortcut": text, "shortcut_id": sc.id(), "shortcut_parsed": format!("{sc:?}"),
+                "registered": reg.is_ok(), "register_error": reg.err().map(|e| e.to_string()),
+                // No X11 o register() devolve Ok mesmo se a thread de eventos do global-hotkey tiver morrido
+                // (fonte lida: erro só aparece com a feature `tracing`). Tempo ~0 ms é indício, não prova.
+                "register_ms": register_ms,
+                "env": platform::env_info(), "platform_notes": notes, "tauri": tauri::VERSION }),
+            );
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_report, overlay_cancel])
+        .invoke_handler(tauri::generate_handler![
+            get_report,
+            overlay_cancel,
+            test_overlay,
+            test_overlay_close,
+            log_key
+        ])
         .run(tauri::generate_context!())
         .expect("erro ao executar a prova HF-00");
 }

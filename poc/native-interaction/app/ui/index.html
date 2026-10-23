@@ -19,10 +19,15 @@
 <p><strong>Build de teste sem assinatura (HF-00).</strong> Não é o produto.</p>
 <p id="info">Carregando…</p>
 <p>
+  <button id="test" title="Abre o overlay pelo mesmo fluxo do atalho, sem usar o teclado">Testar overlay (abre/fecha)</button>
+  <button id="testclose" title="Fecha o overlay sem depender do teclado">Fechar overlay</button>
+</p>
+<p>
   <button id="copy">Copiar relatório (JSON)</button>
   <button id="refresh">Atualizar</button>
   <span id="status"></span>
 </p>
+<p style="font-size:12px;opacity:.8">Diagnóstico de teclado: <code>hotkey_raw</code> = o atalho GLOBAL chegou ao app (Pressed/Released, antes de qualquer comparação). <code>webview_key</code> = tecla vista por ESTA janela (só combinações com Ctrl/Alt/Meta e os modificadores; clique na janela antes de testar). <code>window_error</code>/<code>hotkey_error</code> = operação de janela/atalho que falhou.</p>
 <div id="drop">Janela de diagnóstico: soltar aqui NÃO conta como teste do fluxo global (só do overlay).</div>
 <table><thead><tr><th>t (ms)</th><th>evento</th><th>detalhe</th></tr></thead><tbody id="log"></tbody></table>
 <script src="main.js"></script>

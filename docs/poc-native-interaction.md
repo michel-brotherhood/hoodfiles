@@ -88,6 +88,43 @@ Leitura honesta: (a) a falha está associada a o arraste cruzar outra janela do 
 
 Consequência: **ainda não há evidência de recebimento de caminhos de um arraste externo em Windows, macOS ou Linux Mint reais.** Provados: lógica portátil, compilação (CI) nos três sistemas e, em Linux X11 sintético (container Ubuntu, não Mint), o fluxo atalho-durante-o-arraste→overlay→drop→Escape em 39/40 repetições.
 
+### 4.2 Relato do Mint 22.3 (Cinnamon, X11, build `818d708`): atalho não abre o overlay
+
+Fato reportado: o app abre e o `startup` mostra `registered: true`; pressionar o atalho (padrão e `Control+Alt+H`) sem arrastar não abre o overlay; os relatórios só têm `startup`. Como nenhum `transition` aparece, o evento **não chegou à máquina de estados**: ou o handler não foi chamado, ou a comparação do atalho falhou.
+
+O que a leitura do código (`global-hotkey` 0.8.0, X11) mostra, sem executar no Mint:
+
+| Ponto | Fato lido no código | Por que importa |
+| --- | --- | --- |
+| `register()` | Se a thread interna de eventos tiver morrido, o erro só aparece com a feature opcional `tracing` e `register()` devolve `Ok(())` | `registered: true` **não prova** que o atalho está ativo (hipótese H1) |
+| Modificadores | Compara o estado X11 exatamente com `Alt→Mod1`, `Ctrl`, `Shift`, `Super→Mod4`, ignorando Num/Caps Lock | Se o `Alt` do teclado não for `Mod1` (opção de layout), o atalho nunca casa (H2) |
+| Keycode | Usa o **primeiro** keycode cujo mapa contenha o keysym `d`/`h` em qualquer coluna | Layouts múltiplos/incomuns podem escolher outro keycode (H3) |
+| Conflito | Se outro cliente já tem o mesmo grab, o `register` falha com `AlreadyRegistered` | Não é o caso (o registro devolveu `Ok`), mas só vale se a thread estiver viva |
+
+Hipóteses abertas, **nenhuma confirmada**: H1 thread de eventos morta; H2 mapeamento de modificadores; H3 escolha de keycode; H4 outra causa no Cinnamon/Muffin. Nada foi alterado nas configurações do Cinnamon nem nas dependências.
+
+**Instrumentação adicionada (build seguinte):**
+
+- `hotkey_raw`: gravado na **entrada** do handler global, antes de qualquer comparação: `event_id`, `state` (`Pressed`/`Released`), atalho resolvido, `shortcut_id`, `is_main`/`is_escape` e nome da thread.
+- `window_error` e `hotkey_error`: erros de `set_size`, `set_position`, `show`, `hide`, `set_always_on_top`, `run_on_main_thread`, cursor/monitores e registro/remoção do Escape, antes ignorados. `overlay_shown` agora inclui `cursor_error`/`monitors_error`; `overlay_probe` (300 ms depois) mostra `visible`, posição e tamanho reais.
+- `startup`: `shortcut_id`, atalho resolvido e `register_ms` (tempo próximo de 0 ms é indício de thread morta, não prova; no teste sintético deu ≈ 20 ms).
+- Botões **Testar overlay (abre/fecha)** e **Fechar overlay** na janela de diagnóstico: usam o mesmo fluxo do atalho (máquina de estados → thread principal → `show_overlay`), sem teclado. Separam “captura do teclado” de “exibição do painel”.
+- `webview_key`: teclas vistas pela **webview** da janela de diagnóstico (só combinações com Ctrl/Alt/Meta e as próprias modificadoras), com `code`, `alt`, `meta`, `altGraph`: mostra o que o GTK/WebKit entende como Alt.
+- `linux-run-checks.sh`: leituras somente-leitura de `setxkbmap -query`, `xmodmap -pm` e das teclas d/h/modificadores.
+
+**Como ler o próximo relatório:**
+
+| Observação | Leitura |
+| --- | --- |
+| `hotkey_raw` Pressed aparece, mas não há `overlay_shown` | falha entre handler e exibição: ver `transition`, `window_error` e `overlay_probe` |
+| `overlay_probe` com `visible:false` ou posição diferente do esperado | o gerenciador de janelas ignorou o painel (display), não o teclado |
+| Botão abre o overlay e o `overlay_probe` confere | exibição OK; o problema é só a captura do atalho |
+| Botão **não** abre: `window_error`/`error` | o problema é de janela (a mensagem diz qual operação) |
+| Sem `hotkey_raw`, mas `webview_key` mostra `ctrl`+`alt`+`shift` e `code: KeyD` | os modificadores são os esperados para o WebKit: suspeitar de H1 (ver `register_ms`) ou H3 (`xmodmap`) |
+| `webview_key` mostra `alt:false`/`meta:true` para a tecla Alt | Alt mapeado de outro modo (H2): testar `HF_POC_SHORTCUT` sem Alt |
+
+Variantes inofensivas para repetir (variável de ambiente do app, nada do Cinnamon muda): `HF_POC_SHORTCUT=F9`, `HF_POC_SHORTCUT=Control+Shift+F9`, `HF_POC_SHORTCUT=Alt+Shift+KeyD`. Verificação sintética (Xvfb): `hotkey_raw`, `overlay_probe` e os dois botões funcionam; isso **não** reproduz nem explica o relato do Mint.
+
 ## 5. Matriz de testes nativos (preencher na máquina de destino)
 
 `PENDENTE` em todas as linhas. Variantes a repetir nos casos N03–N06 e N09: padrão; `HF_POC_FOCUSABLE=0`; `HF_POC_ESCAPE=webview`; `HF_POC_MODE=hold`.

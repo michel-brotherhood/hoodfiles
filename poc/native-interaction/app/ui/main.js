@@ -25,6 +25,29 @@ async function refresh() {
   last.log.forEach(addRow);
 }
 
+function uiError(what, e) {
+  addRow({ t_ms: '-', kind: 'ui_error', detail: { what, error: String(e) } });
+}
+document.getElementById('test').onclick = () => invoke('test_overlay').catch((e) => uiError('test_overlay', e));
+document.getElementById('testclose').onclick = () => invoke('test_overlay_close').catch((e) => uiError('test_overlay_close', e));
+
+// Teclas vistas pela webview: só combinações com Ctrl/Alt/Meta e as próprias modificadoras (nunca texto digitado).
+const MODIFIER_KEYS = new Set(['Control', 'Alt', 'Shift', 'Meta', 'AltGraph', 'OS', 'Super']);
+function onKey(ev, type) {
+  if (ev.repeat) return;
+  if (!(ev.ctrlKey || ev.altKey || ev.metaKey || MODIFIER_KEYS.has(ev.key))) return;
+  const gms = (m) => (ev.getModifierState ? ev.getModifierState(m) : null);
+  invoke('log_key', {
+    key: {
+      type, key: ev.key, code: ev.code, location: ev.location,
+      ctrl: ev.ctrlKey, alt: ev.altKey, shift: ev.shiftKey, meta: ev.metaKey,
+      altGraph: gms('AltGraph'), os: gms('OS'), capsLock: gms('CapsLock'), numLock: gms('NumLock'),
+    },
+  }).catch(() => {});
+}
+window.addEventListener('keydown', (e) => onKey(e, 'down'));
+window.addEventListener('keyup', (e) => onKey(e, 'up'));
+
 document.getElementById('refresh').onclick = refresh;
 document.getElementById('copy').onclick = async () => {
   await refresh();

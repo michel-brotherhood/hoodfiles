@@ -52,10 +52,27 @@ start_app
 
 # 1) Atalho + posicionamento (sem arraste).
 show_overlay
+check '"kind":"hotkey_raw"' "handler do atalho global recebeu o evento (hotkey_raw)"
+check '"state":"Pressed"' "hotkey_raw registrou Pressed"
+check '"state":"Released"' "hotkey_raw registrou Released"
 check overlay_shown "atalho mostra overlay"
+grep overlay_probe "$LOG" | tail -1 | grep -q '"visible":true' && echo "OK   sonda 300 ms: overlay visível no gerenciador de janelas" || { echo "FALHA sonda do overlay"; cat "$LOG"; exit 1; }
 [ "$X" = 976 ] && [ "$Y" = 556 ] && echo "OK   overlay em 976,556 (cursor 960,540 + deslocamento 16)" || { echo "FALHA posição do overlay: $RECT"; exit 1; }
 xdotool key Escape; sleep 0.5
 check 'cancelado: Escape' "Escape global cancela o overlay"
+
+# 1b) Botão "Testar overlay" (sem teclado global): clica na faixa visível da janela de diagnóstico,
+#     Tab -> 1º botão (Testar overlay), Enter; Tab -> 2º botão (Fechar overlay), Enter.
+diag=""; for w in $(xdotool search --name "" 2>/dev/null); do case "$(xdotool getwindowname "$w" 2>/dev/null)" in *diagn*) diag=$w;; esac; done
+[ -n "$diag" ] || { echo "FALHA janela de diagnóstico não encontrada"; exit 1; }
+read -r DX DY < <(xdotool getwindowgeometry "$diag" | awk '/Position/{split($2,a,","); print a[1], a[2]}')
+xdotool mousemove $((DX + 700)) $((DY + 40)) click 1; sleep 0.4
+ui_before=$(grep -c '"kind":"ui_test_overlay"' "$LOG" || true)
+xdotool key Tab; sleep 0.2; xdotool key Return; sleep 1.2
+check '"action":"open"' "botão 'Testar overlay' abriu o overlay pelo mesmo fluxo"
+[ "$(grep -c '"kind":"overlay_shown"' "$LOG")" -ge 2 ] || { echo "FALHA botão não mostrou o overlay"; cat "$LOG"; exit 1; }
+xdotool key Tab; sleep 0.2; xdotool key Return; sleep 0.8
+check '"action":"close"' "botão 'Fechar overlay' fechou o overlay sem teclado global"
 
 # 2) FLUXO REAL: botão pressionado e arraste em andamento -> atalho -> overlay aparece -> soltar nele.
 #    Lote de 2 arquivos com Unicode. Até 3 instâncias do app (ver nota no topo).

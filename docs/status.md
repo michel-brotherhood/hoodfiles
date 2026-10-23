@@ -82,3 +82,17 @@ Versão do Mint e sessão gráfica usadas no teste: NÃO REGISTRADAS (nenhum tes
 Riscos pendentes: R1-R6; intermitência do overlay no Linux; Wayland não avaliado; Mint 21.x/LMDE não cobertos pelo build Ubuntu 24.04
 Próxima tarefa elegível: responsável executa ROTEIRO-N03-N06.md nos três sistemas
 ```
+
+### 2026-10-23 — HF-00: relato do Mint 22.3 (atalho não abre o overlay)
+
+```text
+Tarefa: instrumentar o atalho global e separar captura de teclado de exibição do overlay
+Estado: em andamento (gate BLOQUEADO; exige Windows, macOS e Linux Mint)
+Relato (teste do responsável): Linux Mint 22.3, Cinnamon, sessão X11, build 818d708: app abre, registered:true, atalho (padrão e Control+Alt+H) não abre o overlay; relatórios só com startup.
+Alterações: hotkey_raw na entrada do handler (id, Pressed/Released); window_error/hotkey_error para operações antes ignoradas; overlay_probe (300 ms); botões "Testar overlay" e "Fechar overlay"; webview_key; startup com shortcut_id e register_ms; linux-run-checks.sh com leituras somente-leitura de teclado; smoke Linux cobre hotkey_raw, sonda e botões
+Decisões e evidências: causa NÃO identificada. Leitura de global-hotkey 0.8.0 (X11): register() devolve Ok mesmo com a thread de eventos morta (H1); comparação exata de modificadores (H2); escolha do primeiro keycode com o keysym (H3). Nada alterado em dependências nem no Cinnamon.
+Comandos e resultados (container Ubuntu 24.04, Xvfb): cargo fmt/clippy -D warnings limpos; smoke 4/4 com os novos checks (hotkey_raw, overlay_probe, botões, drag). Não reproduz o relato do Mint.
+Testes nativos por SO: Windows PENDENTE; macOS PENDENTE; Linux Mint PARCIAL (22.3/X11: atalho sem efeito; arraste NÃO testado)
+Riscos pendentes: atalho global pode não funcionar no Mint real; sessão Wayland não avaliada
+Próxima tarefa elegível: responsável roda o novo artifact Linux e envia o relatório JSON e a saída de linux-run-checks.sh (roteiro, seção 4b)
+```
