@@ -10,7 +10,7 @@ Status: desenho inicial sujeito à prova HF-00. A documentação não atesta sup
 | Serviço de aplicação | Validar operações, planejar jobs, comunicar progresso | Contratos tipados e versionados |
 | Núcleo de arquivos | Identificação, destino, publicação segura | Originais sempre preservados |
 | Engines | Conversões e inspeção | Processos/workers limitados |
-| Adaptadores Windows/macOS | Drag/drop, atalhos, tray, revelar saída | APIs específicas por plataforma |
+| Adaptadores Windows/macOS/Linux | Drag/drop, atalhos, tray, revelar saída | APIs específicas por plataforma; Linux via GTK/X11 |
 | Persistência | Preferências e registros mínimos | Local, sem conteúdos |
 
 O núcleo deve ser reutilizável. A integração de arraste precisa de implementação e testes por sistema. Não assumir que um atalho global fornece acesso ao conteúdo do arraste de outra aplicação.
@@ -28,7 +28,7 @@ src/                    interface e contratos do cliente
 src-tauri/src/app/      casos de uso e jobs
 src-tauri/src/files/    identificação e destino seguro
 src-tauri/src/engines/  adaptadores de conversão
-src-tauri/src/platform/ windows e macos
+src-tauri/src/platform/ windows, macos e linux
 src-tauri/capabilities/ permissões por janela
 tests/fixtures/         arquivos pequenos próprios ou redistribuíveis
 tests/integration/      engines e contratos
@@ -36,6 +36,12 @@ docs/                   especificação e evidências
 ```
 
 Essa árvore é proposta; adaptar ao framework efetivamente escolhido, evitando módulos vazios para funcionalidades futuras.
+
+## Notas de plataforma (Tauri 2)
+
+- Em uma `WebviewWindow` (janela com uma webview), eventos de arraste chegam como `WindowEvent::DragDrop`, via `on_window_event`; `on_webview_event` **não** os recebe. Medido na prova HF-00 (ver `docs/poc-native-interaction.md`).
+- Chamadas de janela/NSWindow devem ocorrer na thread principal; handlers de atalho global podem rodar em outra thread e travar se chamarem a API de janela diretamente.
+- Linux depende de GTK3 e WebKitGTK 4.1 do sistema (ver `docs/distribution.md`).
 
 ## Contratos
 

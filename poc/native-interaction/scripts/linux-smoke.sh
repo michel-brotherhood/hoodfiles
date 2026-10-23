@@ -3,7 +3,7 @@
 # NÃO substitui os testes em Explorer/Finder. Requer: xvfb xdotool python3-gi, libs do Tauri.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BIN=${BIN:-target/debug/hf-poc-app}
+BIN=${BIN:-target/debug/hf-poc-app}   # em CI: BIN=target/release/hf-poc-app
 export DISPLAY=${DISPLAY:-:99}
 export HOME=$(mktemp -d)               # isola o log do app
 FIX=$(mktemp -d)
@@ -32,20 +32,25 @@ RECT=$(grep -m1 overlay_shown "$LOG" | python3 -c 'import sys,json;print(*json.l
 read -r X Y W H <<<"$RECT"
 [ "$X" = 976 ] && [ "$Y" = 556 ] && echo "OK   overlay em 976,556 (cursor 960,540 + deslocamento 16)" || { echo "FALHA posição do overlay: $RECT"; exit 1; }
 
-# 2) Arraste X11 real entre processos (fonte GTK -> overlay). INFORMATIVO: em Xvfb+openbox com
-#    WebKitGTK 2.52/wry 0.57 o evento NÃO chegou (ver docs/poc-native-interaction.md). O controle
-#    abaixo prova que a ferramenta de arraste funciona contra um alvo GTK simples.
+# 2) Arraste X11 real entre processos (fonte GTK -> overlay), lote de 2 com Unicode.
+#    A prova mediu falha intermitente (~2-8%) neste harness sintético (Xvfb+openbox+xdotool) sem causa
+#    isolada abaixo do wry; por isso até 3 tentativas. Falha só se TODAS falharem.
 /usr/bin/python3.12 scripts/gtk_drag_source.py "$FIX/foto café 😀.png" "$FIX/日本語 b'c\".txt" & pids+=($!)
 sleep 2
-xdotool mousemove 150 130 mousedown 1
-for i in 1 2 3 4 5 6 7 8 9 10; do xdotool mousemove $((150 + (X + W/2 - 150) * i / 10)) $((130 + (Y + H/2 - 130) * i / 10)); sleep 0.1; done
-sleep 0.5; xdotool mouseup 1; sleep 1
-if grep -q drag_enter "$LOG"; then
-  echo "OK   arraste externo recebido pelo overlay"
-  grep -q '"kind":"drop_accepted"' "$LOG" && echo "OK   drop registrado" || echo "INFO drop não registrado"
-else
-  echo "INFO arraste externo NÃO chegou ao overlay neste ambiente (não é falha de Windows/macOS; ver relatório)"
-fi
+ok=0
+for attempt in 1 2 3; do
+  xdotool mousemove 150 130 mousedown 1
+  for i in 1 2 3 4 5 6 7 8 9 10; do xdotool mousemove $((150 + (X + W/2 - 150) * i / 10)) $((130 + (Y + H/2 - 130) * i / 10)); sleep 0.1; done
+  # Ponteiro humano gera muitos eventos dentro do alvo; o harness precisa imitar isso.
+  for j in 1 2 3 4 5 6; do xdotool mousemove $((X + W/2 + j*8)) $((Y + H/2 + j*4)); sleep 0.1; done
+  sleep 0.5; xdotool mouseup 1; sleep 1
+  if grep -q '"kind":"drop_accepted"' "$LOG"; then ok=1; echo "OK   arraste externo recebido e solto (tentativa $attempt de 3)"; break; fi
+  echo "INFO tentativa $attempt sem drop registrado"
+done
+[ "$ok" = 1 ] || { echo "FALHA arraste externo não chegou em 3 tentativas"; cat "$LOG"; exit 1; }
+check drag_enter "drag_enter registrado"
+check 'foto café 😀.png' "nome Unicode/emoji preservado"
+check '"count":2' "lote de 2 arquivos recebido"
 
 # 3) Escape (global) cancela: volta a Idle e testa de novo.
 xdotool key Escape; sleep 0.5

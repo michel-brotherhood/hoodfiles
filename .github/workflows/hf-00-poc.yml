@@ -43,6 +43,11 @@ jobs:
             runner: macos-15
             target: aarch64-apple-darwin
             os_tag: macos-arm64
+          # ubuntu-24.04 (x64) = base do Linux Mint 22.x. NÃO é o Mint real.
+          - name: Linux x64 (Ubuntu 24.04, base do Mint 22.x)
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            os_tag: linux-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -64,6 +69,16 @@ jobs:
           key: poc-${{ matrix.os_tag }}-${{ hashFiles('poc/native-interaction/Cargo.lock') }}
           restore-keys: poc-${{ matrix.os_tag }}-
 
+      - name: Dependências de build do Linux
+        if: matrix.os_tag == 'linux-x64'
+        shell: bash
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev libayatana-appindicator3-dev \
+            xvfb xdotool openbox python3-gi gir1.2-gtk-3.0
+
       - name: Formatação
         run: cargo fmt --all -- --check
 
@@ -75,6 +90,12 @@ jobs:
 
       - name: Build release (nativo)
         run: cargo build --release -p hf-poc-app --locked
+
+      - name: Smoke Linux (Xvfb; arraste X11 sintético)
+        if: matrix.os_tag == 'linux-x64'
+        env:
+          BIN: target/release/hf-poc-app
+        run: scripts/linux-smoke.sh
 
       - name: Empacotar build de teste sem assinatura
         run: scripts/package-ci.sh "${{ matrix.os_tag }}" "${HEAD_SHA::7}"

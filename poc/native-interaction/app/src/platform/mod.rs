@@ -25,6 +25,8 @@ pub struct EnvInfo {
     pub arch: &'static str,
     /// `Some(true)` se o processo roda elevado (Windows). `None` = não aplicável/desconhecido.
     pub elevated: Option<bool>,
+    /// Pares chave/valor do ambiente (no Linux: distribuição, sessão gráfica, desktop...).
+    pub details: std::collections::BTreeMap<String, String>,
     pub notes: Vec<String>,
 }
 

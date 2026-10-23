@@ -4,22 +4,22 @@ Execute na ordem das dependências. Cada etapa termina com diff revisado, checks
 
 ## HF-00 — Viabilidade da experiência nativa
 
-Dependência: nenhuma. Criar prova mínima, separada do código de produção, para Windows e macOS.
+Dependência: nenhuma. Criar prova mínima, separada do código de produção, para Windows, macOS e Linux Mint.
 
-- Inventariar ambiente e acesso às máquinas dos dois sistemas.
+- Inventariar ambiente e acesso às máquinas dos três sistemas (no Mint: versão e tipo de sessão gráfica, X11 ou Wayland).
 - Capturar entrada por arraste normal e investigar ativação durante arraste externo.
 - Validar overlay, drop target, foco, cancelamento e retorno ao aplicativo de origem.
 - Testar atalho sem disparar ações indesejadas do sistema.
 - Testar seleção múltipla, nomes Unicode, múltiplos monitores, DPI/Retina e saída pelo Escape.
 - Não executar conversão ainda; mostrar somente os arquivos realmente recebidos.
 
-Aceite: evidência gravada ou roteiro reproduzível com resultados nos dois sistemas, código da prova e relatório de limitações. Comparar Tauri/Electron apenas se necessário; fechar ADR-0001 com decisão fundamentada. Um sistema não disponível fica bloqueado, não aprovado. Pode continuar investigação e lógica portátil, sem declarar o gate concluído.
+Aceite: evidência gravada ou roteiro reproduzível com resultados nos três sistemas (Windows, macOS e Linux Mint), código da prova e relatório de limitações. Comparar Tauri/Electron apenas se necessário; fechar ADR-0001 com decisão fundamentada. Um sistema não disponível ou não testado fica bloqueado, não aprovado; o gate só fecha com os três validados. Pode continuar investigação e lógica portátil, sem declarar o gate concluído.
 
 ## HF-01 — Fundação
 
 Depende de HF-00 aprovado. Criar projeto, scripts reais, lockfiles, lint, checks de tipos, testes e build. Implementar tray/menu bar, instância única, janela principal e configuração local. Definir versões mínimas e arquiteturas suportadas no ADR.
 
-Aceite: app abre e fecha corretamente nos dois sistemas; scripts documentados executam; sair encerra workers. Não iniciar no login sem consentimento nas preferências.
+Aceite: app abre e fecha corretamente nos três sistemas; scripts documentados executam; sair encerra workers. Não iniciar no login sem consentimento nas preferências.
 
 ## HF-02 — Núcleo seguro de arquivos
 
@@ -43,7 +43,7 @@ Aceite: erro em um job não cancela outros por acidente; cancelar impede publica
 
 Depende de HF-04 e mecanismo aprovado em HF-00. Integrar menu contextual com catálogo real, atalhos remapeáveis, teclado e preferências. Testar foco, escala e desempenho com UI aberta/oculta.
 
-Aceite: repetir fluxo real desde Explorer/Finder até saída; menu não contém opções falsas; cancelamento devolve controle; leitor de tela e teclado têm percurso utilizável.
+Aceite: repetir fluxo real desde Explorer/Finder/Nemo até saída; menu não contém opções falsas; cancelamento devolve controle; leitor de tela e teclado têm percurso utilizável.
 
 ## HF-06 — Beta de imagens
 

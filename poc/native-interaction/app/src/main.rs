@@ -15,8 +15,8 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Instant;
 use tauri::{
-    DragDropEvent, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewEvent, WebviewUrl,
-    WebviewWindow, WebviewWindowBuilder,
+    DragDropEvent, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -340,8 +340,9 @@ fn main() {
             notes.extend(platform::configure_overlay(&overlay));
 
             let handle = app.handle().clone();
-            overlay.on_webview_event(move |ev| {
-                let WebviewEvent::DragDrop(d) = ev else { return };
+            // WebviewWindow: o arraste chega como WindowEvent::DragDrop (on_webview_event NÃO dispara).
+            overlay.on_window_event(move |ev| {
+                let WindowEvent::DragDrop(d) = ev else { return };
                 match d {
                     DragDropEvent::Enter { paths, .. } => {
                         // Evidência-chave: o SO entrega os caminhos já na entrada do arraste?
@@ -367,8 +368,8 @@ fn main() {
             // "arraste externo não chega a nenhuma webview" de "o overlay específico falha".
             if let Some(main) = app.get_webview_window("main") {
                 let h = app.handle().clone();
-                main.on_webview_event(move |ev| {
-                    let WebviewEvent::DragDrop(d) = ev else { return };
+                main.on_window_event(move |ev| {
+                    let WindowEvent::DragDrop(d) = ev else { return };
                     let (kind, n) = match d {
                         DragDropEvent::Enter { paths, .. } => ("main_drag_enter", paths.len()),
                         DragDropEvent::Drop { paths, .. } => ("main_drop", paths.len()),

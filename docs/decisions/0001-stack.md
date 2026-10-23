@@ -4,7 +4,7 @@ Status: proposta, aguardando HF-00 (prova implementada; testes nativos Windows/m
 
 ## Contexto
 
-HoodFiles precisa operar localmente em Windows e macOS e oferecer integração durante o arraste. A experiência global é requisito central, cuja viabilidade deve ser demonstrada antes da fundação completa.
+HoodFiles precisa operar localmente em Windows, macOS e Linux Mint e oferecer integração durante o arraste. A experiência global é requisito central, cuja viabilidade deve ser demonstrada antes da fundação completa.
 
 ## Hipótese de decisão
 
@@ -26,4 +26,4 @@ Comparar outra stack somente quando houver bloqueio ou vantagem demonstrável. S
 
 ## Consequências
 
-Possível necessidade de código Swift/Objective-C ou C/C++/Rust via APIs nativas. Builds e testes por sistema são necessários. Versões mínimas e arquiteturas devem ser fixadas a partir das dependências e das máquinas efetivamente testadas.
+No Linux, o Tauri depende de GTK3/WebKitGTK 4.1 do sistema; a sessão (X11 ou Wayland) afeta atalho global e posicionamento. Possível necessidade de código Swift/Objective-C ou C/C++/Rust via APIs nativas. Builds e testes por sistema são necessários. Versões mínimas e arquiteturas devem ser fixadas a partir das dependências e das máquinas efetivamente testadas.

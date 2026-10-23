@@ -23,7 +23,7 @@ Este pacote foi revisado como documentação; nenhum app foi implementado ou tes
 | Crash | Fechar worker/app durante conversão | Originais intactos e temporários recuperáveis |
 | Segurança | IPC inválido, metacaracteres e links | Nenhuma ampliação de acesso |
 | Offline | Rede bloqueada, engines presentes | Conversão local completa |
-| UX nativa | Arraste em Explorer/Finder, Escape e atalhos conflitantes | Controle devolvido corretamente ao usuário |
+| UX nativa | Arraste em Explorer/Finder/Nemo, Escape e atalhos conflitantes | Controle devolvido corretamente ao usuário |
 
 ## Fixtures e oráculos
 
@@ -33,7 +33,7 @@ PDF exige renderizar páginas resultantes e revisar ordem/layout. Mídia exige i
 
 ## Ambiente
 
-Registrar SO/build, CPU/arquitetura, RAM, engine e versão do aplicativo. Windows x64 e macOS Apple silicon são alvos iniciais propostos; versões mínimas serão fixadas na prova. Intel Mac e Windows ARM só entram após pipeline e engine comprovados. Linux pode testar lógica portátil; não comprova compatibilidade desktop nos alvos.
+Registrar SO/build, CPU/arquitetura, RAM, engine e versão do aplicativo. Windows x64, macOS Apple silicon e Linux Mint x86_64 são alvos oficiais; versões mínimas serão fixadas na prova. No Mint, registrar sempre a versão (`/etc/os-release`), o ambiente (`XDG_CURRENT_DESKTOP`) e o tipo de sessão (`XDG_SESSION_TYPE`: x11 ou wayland), pois o comportamento de atalho, posição de janela e arraste depende disso. Intel Mac, Windows ARM, Linux ARM e outras distribuições só entram após pipeline e engine comprovados. Container Ubuntu/Xvfb e CI testam lógica portátil e compilação; não comprovam o comportamento no Mint real, nem em Windows ou macOS.
 
 Não pressupor que Playwright no navegador cobre a WebView nativa. Escolher automação suportada pelo framework e plataforma; quando não existir, documentar teste manual reproduzível.
 

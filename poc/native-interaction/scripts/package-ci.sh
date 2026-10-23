@@ -15,6 +15,24 @@ case "$OS" in
     (cd "$OUT" && sha256sum hf-poc-app.exe > SHA256SUMS.txt)
     # zip preserva tudo no Windows; o artifact do Actions já é um .zip, então entrega a pasta.
     ;;
+  linux-x64)
+    cp target/release/hf-poc-app "$OUT/"
+    chmod +x "$OUT/hf-poc-app"
+    # Dependências dinâmicas reais do binário, com o pacote deb de cada biblioteca (evidência, não suposição).
+    {
+      echo "# Bibliotecas dinâmicas (readelf NEEDED) e pacotes deb deste build ($(. /etc/os-release; echo "$PRETTY_NAME"))"
+      readelf -d "$OUT/hf-poc-app" | awk '/NEEDED/{gsub(/[\[\]]/,"",$5); print $5}' | while read -r lib; do
+        path=$(ldconfig -p | awk -v l="$lib" '$1==l{print $NF; exit}')
+        pkg=$(dpkg -S "$(readlink -f "$path")" 2>/dev/null | cut -d: -f1 | head -1)
+        printf '%-34s %s\n' "$lib" "${pkg:-?}"
+      done
+    } > "$OUT/DEPENDENCIAS-RUNTIME.txt"
+    cp scripts/linux-run-checks.sh "$OUT/"
+    tar -C dist -czf "dist/hf-poc-linux-x64-$SHA.tar.gz" "hf-poc-$OS-$SHA"
+    rm -rf "$OUT"
+    (cd dist && sha256sum "hf-poc-linux-x64-$SHA.tar.gz" > SHA256SUMS.txt)
+    OUT=dist
+    ;;
   macos-arm64)
     APP="$OUT/HoodFilesPoC.app"
     mkdir -p "$APP/Contents/MacOS"

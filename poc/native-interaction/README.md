@@ -1,6 +1,6 @@
 # Prova HF-00 — interação nativa (não é o produto)
 
-Tauri 2.12.5 + Rust. Mostra, sem converter nada, se este fluxo funciona: **arrastar arquivos no Explorer/Finder → pressionar atalho → overlay perto do cursor → soltar no overlay → app recebe os caminhos**. Relatório e matriz de resultados: `docs/poc-native-interaction.md`.
+Tauri 2.12.5 + Rust, para Windows, macOS e Linux Mint. Mostra, sem converter nada, se este fluxo funciona: **arrastar arquivos no Explorer/Finder → pressionar atalho → overlay perto do cursor → soltar no overlay → app recebe os caminhos**. Relatório e matriz de resultados: `docs/poc-native-interaction.md`.
 
 ## Estrutura
 
@@ -15,6 +15,7 @@ Tauri 2.12.5 + Rust. Mostra, sem converter nada, se este fluxo funciona: **arras
 
 - **Windows 10/11 x64:** Rust estável (`rustup`), Visual Studio Build Tools com “Desenvolvimento para desktop com C++”, WebView2 Runtime (já presente no Windows 11).
 - **macOS (Apple silicon):** Xcode Command Line Tools (`xcode-select --install`), Rust estável.
+- **Linux Mint 22.x (x86_64):** Rust estável e `sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev libayatana-appindicator3-dev`. Para só **executar** o build pronto, basta o runtime (ver `ROTEIRO-N03-N06.md`).
 - Nenhum Node/npm: a UI é estática.
 
 ## Executar (Windows e macOS)
@@ -42,7 +43,7 @@ Windows (PowerShell): `$env:HF_POC_FOCUSABLE="0"; cargo run -p hf-poc-app`. macO
 
 ## CI e builds de teste sem assinatura
 
-`.github/workflows/hf-00-poc.yml` (PR e execução manual) roda em `windows-2025` (x64) e `macos-15` (Apple silicon/arm64): fmt, clippy `-D warnings`, testes do núcleo, build release e empacotamento. Falha se o host do Rust não for o esperado. Os artifacts (`...SEM-ASSINATURA...`, retenção 14 dias) **não são assinados nem notarizados**; no macOS o `.app` leva só assinatura ad-hoc (exigência do arm64). **CI verde só prova compilação e lógica portátil, não o fluxo nativo.** Roteiro curto de teste: `ROTEIRO-N03-N06.md`.
+`.github/workflows/hf-00-poc.yml` (PR e execução manual) roda em `windows-2025` (x64), `macos-15` (Apple silicon/arm64) e `ubuntu-24.04` (x64; base do Mint 22.x): fmt, clippy `-D warnings`, testes do núcleo, build release e empacotamento; no Linux também o smoke test em Xvfb. Falha se o host do Rust não for o esperado. Os artifacts (`...SEM-ASSINATURA...`, retenção 14 dias) **não são assinados nem notarizados**; no macOS o `.app` leva só assinatura ad-hoc (exigência do arm64). **CI verde só prova compilação e lógica portátil, não o fluxo nativo.** Roteiro curto de teste: `ROTEIRO-N03-N06.md`.
 
 ## Roteiro de teste manual
 
@@ -52,13 +53,13 @@ Windows (PowerShell): `$env:HF_POC_FOCUSABLE="0"; cargo run -p hf-poc-app`. macO
 4. Clique em **Copiar relatório (JSON)** e cole em `docs/evidence/hf-00/<so>-<data>.json` (ou anexe o `poc-log.jsonl` indicado na barra superior). O log contém nomes de exibição, nunca caminhos completos.
 5. Registre se algum diálogo de permissão apareceu (macOS: Acessibilidade/Monitoramento de Entrada; Windows: SmartScreen/firewall) e a ação exata.
 
-## Smoke Linux (somente lógica comum)
+## Smoke Linux (Xvfb; não é o Mint real)
 
-`scripts/linux-smoke.sh` (precisa de `xvfb xdotool openbox python3-gi` e das libs do Tauri). Verifica atalho, posição do overlay e Escape. Não comprova nada sobre os alvos.
+`scripts/linux-smoke.sh` (precisa de `xvfb xdotool openbox python3-gi` e das libs do Tauri). Verifica atalho, posição do overlay, arraste X11 entre processos (fonte GTK → overlay; até 3 tentativas, ver investigação em `docs/poc-native-interaction.md`) e Escape. Roda em container Ubuntu com servidor X virtual e arraste sintético (xdotool): **não comprova** o comportamento em Linux Mint com Nemo, nem em sessão Wayland.
 
 ## Limitações conhecidas da prova
 
 - Sem ícone na bandeja/barra de menus (HF-01).
 - Sem detecção de tipo/validação de conteúdo — só caminhos e metadados de existência.
-- Atalho/overlay em Wayland não é objetivo.
+- Linux: sessão X11 é a referência; Wayland não está avaliado (atalho global e posicionamento podem não funcionar).
 - O build de `release` e a assinatura não foram avaliados.

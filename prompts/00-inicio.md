@@ -1,12 +1,12 @@
 # Primeiro prompt para o Claude Code
 
-Você vai desenvolver o HoodFiles, aplicativo desktop para Windows e macOS inspirado no fluxo de conversão local e arraste do Tangerine. O código, a interface, os textos e os ativos devem ser próprios.
+Você vai desenvolver o HoodFiles, aplicativo desktop para Windows, macOS e Linux Mint inspirado no fluxo de conversão local e arraste do Tangerine. O código, a interface, os textos e os ativos devem ser próprios.
 
 Leia README.md, CLAUDE.md, docs/spec.md, docs/architecture.md, docs/roadmap.md, docs/security.md, docs/testing.md e docs/status.md. Consulte docs/decisions/0001-stack.md antes de escolher a stack.
 
 Nesta primeira execução, trabalhe somente na HF-00, prova de integração nativa. Não crie o produto completo nem substitua a experiência principal por uma página com upload.
 
-1. Inspecione o diretório, Git e ferramentas sem apagar ou sobrescrever arquivos existentes. Identifique o sistema disponível e o que falta para testar Windows e macOS.
+1. Inspecione o diretório, Git e ferramentas sem apagar ou sobrescrever arquivos existentes. Identifique o sistema disponível e o que falta para testar Windows, macOS e Linux Mint (versão do Mint e tipo de sessão gráfica).
 2. Resuma o produto e apresente um plano curto da prova, riscos e critérios de sucesso. Prossiga com investigação e trabalho local reversível autorizado por este pedido.
 3. Consulte documentação oficial para o mecanismo de arraste externo e menu flutuante. Separe suporte confirmado de hipóteses. Tauri é candidato inicial; comparar Electron somente com motivo técnico.
 4. Implemente a menor prova possível, numa pasta poc/native-interaction, com contratos separados por plataforma. Ainda sem engines de conversão.

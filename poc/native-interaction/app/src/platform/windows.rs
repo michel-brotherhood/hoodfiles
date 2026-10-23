@@ -34,6 +34,7 @@ pub fn env_info() -> EnvInfo {
         os: std::env::consts::OS,
         arch: std::env::consts::ARCH,
         elevated: is_elevated(),
+        details: Default::default(),
         notes: vec![
             "Teste manual exigido: arrastar de um Explorer elevado para este processo não elevado (UIPI)".into(),
         ],

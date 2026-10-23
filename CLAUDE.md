@@ -4,7 +4,11 @@ Responda em português. Leia `docs/spec.md`, `docs/roadmap.md` e `docs/status.md
 
 ## Objetivo
 
-Criar um utilitário desktop de conversão e manipulação local de arquivos para Windows e macOS, com menu contextual rápido durante o arraste. Interface, marca, textos e ativos próprios. O Tangerine é uma referência funcional pública.
+Criar um utilitário desktop de conversão e manipulação local de arquivos para Windows, macOS e Linux Mint, com menu contextual rápido durante o arraste. Interface, marca, textos e ativos próprios. O Tangerine é uma referência funcional pública.
+
+## Plataformas oficiais
+
+Windows x64, macOS Apple silicon e Linux Mint (x86_64). Linux Mint em sessão X11 é a referência inicial; Wayland não está avaliado e não é prometido. Nenhum resultado de uma plataforma vale para outra. Container Ubuntu/Xvfb e CI não substituem o Mint real.
 
 ## Execução
 

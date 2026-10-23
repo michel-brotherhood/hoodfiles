@@ -11,6 +11,7 @@ pub fn env_info() -> EnvInfo {
         os: std::env::consts::OS,
         arch: std::env::consts::ARCH,
         elevated: None,
+        details: Default::default(),
         notes: vec![
             "Atalho via Tauri global-shortcut (RegisterEventHotKey): hipótese de não exigir Acessibilidade/Monitoramento de Entrada — confirmar manualmente e registrar se algum diálogo de permissão surgir".into(),
         ],

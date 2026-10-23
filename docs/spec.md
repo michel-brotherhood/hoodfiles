@@ -6,10 +6,20 @@ Profissionais que lidam com imagens, PDFs, mídias e documentos perdem tempo abr
 
 Público inicial proposto: designers, desenvolvedores, profissionais de marketing e usuários que convertem arquivos com frequência. A hipótese deve ser testada com usuários reais.
 
+## Plataformas oficiais
+
+| Plataforma | Escopo inicial | Observação |
+| --- | --- | --- |
+| Windows | x64 | Versão mínima a fixar na prova |
+| macOS | Apple silicon | Versão mínima a fixar na prova |
+| Linux Mint | x86_64, Cinnamon, sessão **X11** como referência | Versão(ões) do Mint a fixar com testes reais; derivadas e outras distribuições não são prometidas |
+
+Wayland, outros ambientes de desktop e arquiteturas adicionais ficam fora até haver prova própria. A experiência de arraste global pode se comportar de forma diferente em cada sistema; nenhuma plataforma herda resultado de outra.
+
 ## Experiência pretendida
 
-1. HoodFiles permanece disponível na bandeja do Windows ou barra de menus do Mac.
-2. O usuário começa a arrastar um arquivo no Explorer ou Finder e aciona o atalho configurado.
+1. HoodFiles permanece disponível na bandeja do Windows, na barra de menus do Mac ou na área de notificação do Cinnamon (Mint; suporte a verificar).
+2. O usuário começa a arrastar um arquivo no Explorer, Finder ou Nemo (gerenciador do Mint) e aciona o atalho configurado.
 3. Um menu flutuante surge próximo ao cursor, limitado às operações compatíveis. A prova técnica deve definir como receber os arquivos preservando a sessão de arraste.
 4. O usuário escolhe uma operação e solta no alvo correspondente. Se necessário, uma tela pede opções adicionais antes de iniciar.
 5. O resultado é salvo sem modificar o original, com aviso discreto e ação para revelar a saída.
@@ -52,7 +62,7 @@ Preferências em configuração local versionada. Fila em memória na primeira v
 
 ## Fora da primeira entrega
 
-Login, nuvem, colaboração, editor completo, conversões por IA, OCR, cobrança, loja de plugins, monitoramento de pastas, promessa de 275 operações, atualização silenciosa e suporte a Linux como plataforma de produto.
+Login, nuvem, colaboração, editor completo, conversões por IA, OCR, cobrança, loja de plugins, monitoramento de pastas, promessa de 275 operações, atualização silenciosa, outras distribuições Linux, sessões Wayland e arquiteturas além das listadas.
 
 ## Sucesso
 

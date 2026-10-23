@@ -6,8 +6,13 @@
 | --- | --- | --- |
 | Windows x64 | Instalador suportado pela stack escolhida | Versão mínima a fixar; validar dependência WebView se Tauri |
 | macOS Apple silicon | Aplicativo e DMG | Versão mínima a fixar; assinatura/notarização para distribuição pública conforme canal |
+| Linux Mint x86_64 | Pacote `.deb` (candidato principal; instala dependências via apt) ou AppImage; teste atual: `.tar.gz` sem instalação | Versão do Mint, sessão X11/Wayland e bibliotecas a fixar com testes reais |
 | macOS Intel | Artefato separado ou universal | Somente após validar engines e build |
 | Windows ARM | Artefato específico | Investigação posterior |
+
+## Linux Mint: dependências e integridade
+
+O app Tauri usa GTK3 e WebKitGTK 4.1 do sistema, não embarcados. O build de teste é feito em Ubuntu 24.04 (base do Mint 22.x) e depende de glibc compatível; Mint 21.x e LMDE não estão cobertos até haver build e teste próprios. Pacotes de runtime (Ubuntu 24.04 / Mint 22.x): `libwebkit2gtk-4.1-0`, `libjavascriptcoregtk-4.1-0`, `libgtk-3-0t64`, `libsoup-3.0-0`, `libdbus-1-3` (as demais vêm por dependência). Um `.deb` deve declarar essas dependências em `Depends`. Distribuição pública exige assinatura/checksum verificável (repositório apt assinado com GPG ou checksum publicado por canal confiável); decisão pendente. Não prometer que o build de uma versão do Mint funciona em outra.
 
 ## CI
 
@@ -24,6 +29,7 @@ Não baixar binários de URL mutável sem hash e procedência. Embarcar engines 
 - [ ] Permissões e original preservado revisados.
 - [ ] Instalador testado em conta comum e máquina limpa.
 - [ ] Assinatura válida e notarização do Mac verificada conforme canal.
+- [ ] Linux Mint: pacote instalado e desinstalado em conta comum e máquina limpa; dependências declaradas; checksum/assinatura verificáveis.
 - [ ] Checksums e retenção de versão anterior definidos.
 - [ ] Política de privacidade descreve processamento e acessos reais.
 - [ ] Responsável autorizou publicação externa.

@@ -19,7 +19,8 @@ async function refresh() {
   const c = last.config, env = last.env;
   document.getElementById('info').textContent =
     `${env.os}/${env.arch} · Tauri ${last.tauri} · atalho ${c.shortcut} (${c.mode}) · Escape=${c.escape} · ` +
-    `focusable=${c.focusable} · elevado=${env.elevated ?? 'n/a'} · log: ${last.log_file ?? 'n/d'}`;
+    `focusable=${c.focusable} · elevado=${env.elevated ?? 'n/a'} · log: ${last.log_file ?? 'n/d'}` +
+    (env.details['os_release.PRETTY_NAME'] ? ` · ${env.details['os_release.PRETTY_NAME']} · sessão=${env.details.XDG_SESSION_TYPE} · desktop=${env.details.XDG_CURRENT_DESKTOP}` : '');
   rows.replaceChildren();
   last.log.forEach(addRow);
 }

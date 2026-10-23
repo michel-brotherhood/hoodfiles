@@ -6,14 +6,14 @@ Planejamento inicial criado. Código do aplicativo, prova técnica, engines, ins
 
 | Etapa | Estado |
 | --- | --- |
-| HF-00 | Em andamento — prova implementada e testada só na lógica portátil e no Linux; **gate BLOQUEADO**: testes nativos Windows/macOS PENDENTES (`docs/poc-native-interaction.md`, seção 5) |
+| HF-00 | Em andamento — prova implementada e testada só na lógica portátil e no Linux; **gate BLOQUEADO**: testes nativos Windows, macOS e Linux Mint PENDENTES (o gate exige os três) (`docs/poc-native-interaction.md`, seção 5) |
 | HF-01 a HF-11 | Planejadas; dependências não concluídas |
 
 Próxima tarefa: o responsável executa a matriz N01–N20 em Windows x64 e macOS Apple silicon (`poc/native-interaction/README.md`) e anexa as evidências; só então fechar HF-00.
 
 ## Questões que precisam de evidência
 
-- Há acesso a Windows e macOS para a prova? Registrar máquinas disponíveis.
+- Há acesso a Windows, macOS e Linux Mint para a prova? Registrar máquinas, versão do Mint e tipo de sessão (X11/Wayland).
 - Qual mecanismo permite o fluxo global sem quebrar o arraste e sem privilégios excessivos?
 - Quais versões mínimas e arquiteturas terão engines e testes completos?
 
@@ -67,4 +67,18 @@ Testes nativos por SO: Windows PENDENTE; macOS PENDENTE (nenhum executável foi 
 Não executado e motivo: N01-N20 e N03-N06 (dependem de máquina real e pessoa arrastando)
 Riscos pendentes: inalterados (R1-R6 em docs/poc-native-interaction.md); conflitos do novo atalho não verificados (N11)
 Próxima tarefa elegível: responsável executa ROTEIRO-N03-N06.md em ambos os sistemas
+```
+
+### 2026-10-23 — HF-00: Linux Mint como plataforma oficial; investigação do arraste
+
+```text
+Tarefa: incluir Linux Mint; investigar arraste externo falho no Linux; build/CI Linux
+Estado: em andamento (gate BLOQUEADO; exige Windows, macOS e Linux Mint)
+Alterações: docs (spec, arquitetura, roadmap, testes, distribuição, ADR, README, CLAUDE.md) com Linux Mint oficial; platform/linux.rs registra distro/sessão/desktop; job Linux no CI (ubuntu-24.04) com smoke Xvfb; pacote linux-x64 com DEPENDENCIAS-RUNTIME.txt e linux-run-checks.sh; roteiro com seção Mint
+Decisões e evidências: causa do defeito original CONFIRMADA = bug do app (on_webview_event em WebviewWindow nunca dispara; correto é on_window_event), não do wry/WebKitGTK; hipótese info==2 REFUTADA com wry instrumentado. Vale também para Windows/macOS: builds anteriores tinham o defeito. Intermitência residual (~8% com outra janela do app no caminho; ~0,6% fora) SEM causa isolada; GTK puro 0/40 não reproduziu. Nenhuma dependência trocada.
+Comandos e resultados (container Ubuntu 24.04, Xvfb): ver docs/poc-native-interaction.md seção 4.1
+Testes nativos por SO: Windows PENDENTE; macOS PENDENTE; Linux Mint PENDENTE (o container Ubuntu NÃO é Mint)
+Versão do Mint e sessão gráfica usadas no teste: NÃO REGISTRADAS (nenhum teste em Mint foi feito); o app e o linux-run-checks.sh registram esses valores quando executados
+Riscos pendentes: R1-R6; intermitência do overlay no Linux; Wayland não avaliado; Mint 21.x/LMDE não cobertos pelo build Ubuntu 24.04
+Próxima tarefa elegível: responsável executa ROTEIRO-N03-N06.md nos três sistemas
 ```
