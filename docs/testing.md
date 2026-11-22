@@ -1,6 +1,6 @@
 # Plano de testes
 
-Este pacote foi revisado como documentação; nenhum app foi implementado ou testado. A matriz abaixo será preenchida pelo Claude e pelo responsável nas máquinas de destino.
+Este pacote foi revisado como documentação; nenhum app foi implementado ou testado. A matriz abaixo será preenchida pelo responsável e pelos testadores nas máquinas de destino.
 
 ## Camadas de verificação
 
