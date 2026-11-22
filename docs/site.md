@@ -14,7 +14,7 @@ Página estática de pré-lançamento, em `site/`, publicada com GitHub Pages. P
 | `design/identidade-original.webp` | Arte de identidade original (fonte dos assets; **não** é publicada) |
 | `design/make-site-assets.py` | Regenera hero, ícones, `og.jpg`, o banner do README (`docs/img/banner.png`) e a prévia social (`.github/social-preview.png`) a partir da arte original (Pillow) |
 | `.github/scripts/check-site.py` | Verificador: ligações, âncoras, `alt`/dimensões das imagens, zero dependências externas, tamanho |
-| `.github/workflows/pages.yml` | Verifica e publica `site/` com GitHub Pages (execução manual) |
+| `.github/workflows/pages.yml` | Verifica e publica `site/` com GitHub Pages (a cada push na `main` que altere o site, ou manual) |
 
 ## Identidade visual
 
@@ -36,7 +36,7 @@ O site é 100% estático (nenhuma etapa de build). Opções, da mais simples à 
 
 | Opção | Custo | Repositório | Observações |
 | --- | --- | --- | --- |
-| GitHub Pages | grátis **só com repositório público**; privado exige plano pago | público | Usa o workflow `Site (GitHub Pages)`, hoje só manual. URL: `https://michel-brotherhood.github.io/hoodfiles/` |
+| GitHub Pages (em uso) | grátis **só com repositório público**; privado exige plano pago | público | Usa o workflow `Site (GitHub Pages)`, publicado a cada push na `main` que altere `site/`. Site no ar em: `https://michel-brotherhood.github.io/hoodfiles/` |
 | Vercel (plano Hobby) | grátis, uso pessoal e não comercial | pode continuar privado | Importar o repositório, **Root Directory = `site`**, Framework = Other, sem comando de build |
 | Cloudflare Pages ou Netlify | planos gratuitos | pode continuar privado | Mesma configuração: diretório de saída `site`, sem build |
 
