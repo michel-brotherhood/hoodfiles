@@ -1,0 +1,64 @@
+name: Relato de teste nativo
+description: Resultado de um teste da prova de interação (arraste, atalho global e overlay) no seu sistema
+title: "Teste nativo: <sistema> — <resultado>"
+labels: ["teste-nativo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por testar. O roteiro curto está em [`poc/native-interaction/ROTEIRO-N03-N06.md`](https://github.com/michel-brotherhood/hoodfiles/blob/main/poc/native-interaction/ROTEIRO-N03-N06.md).
+        **Não cole caminhos completos nem nomes de arquivos pessoais.** Use os arquivos de teste do roteiro.
+  - type: dropdown
+    id: sistema
+    attributes:
+      label: Sistema operacional
+      options: ["Windows 10", "Windows 11", "macOS", "Linux Mint", "Outro Linux"]
+    validations: { required: true }
+  - type: input
+    id: versao
+    attributes:
+      label: Versão e arquitetura
+      description: "Ex.: Windows 11 23H2 x64; macOS 15.1 Apple silicon; Linux Mint 22.3 x86_64"
+    validations: { required: true }
+  - type: dropdown
+    id: sessao
+    attributes:
+      label: Sessão gráfica (Linux)
+      options: ["Não se aplica", "X11", "Wayland", "Não sei"]
+    validations: { required: true }
+  - type: input
+    id: build
+    attributes:
+      label: Build testado
+      description: "Nome do artifact ou commit (ex.: hf-poc-linux-x64-SEM-ASSINATURA-14190daa…)"
+    validations: { required: true }
+  - type: dropdown
+    id: resultado
+    attributes:
+      label: Resultado do fluxo (arrastar, atalho durante o arraste, soltar no overlay)
+      options: ["Funcionou do início ao fim", "Funcionou em parte", "Não funcionou"]
+    validations: { required: true }
+  - type: textarea
+    id: passos
+    attributes:
+      label: O que aconteceu em cada passo (N03 a N06)
+      description: "O overlay apareceu? O arraste continuou? Os arquivos chegaram? O que o log mostrou?"
+    validations: { required: true }
+  - type: textarea
+    id: relatorio
+    attributes:
+      label: Relatório JSON da janela de diagnóstico
+      description: "Botão “Copiar relatório (JSON)”. Cole aqui."
+      render: json
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Saída de linux-run-checks.sh e linux-key-probe.sh (só Linux)
+      render: text
+  - type: checkboxes
+    id: privacidade
+    attributes:
+      label: Privacidade
+      options:
+        - label: Conferi que o texto acima não tem caminhos completos nem nomes de arquivos pessoais.
+          required: true

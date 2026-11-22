@@ -1,14 +1,10 @@
 name: Site (GitHub Pages)
 
-# Publica a pasta site/ (página estática de pré-lançamento). Só roda na main ou manualmente.
-# Pré-requisito único, feito uma vez no GitHub: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Publica a pasta site/ com GitHub Pages. Só roda manualmente (Actions → Run workflow).
+# GitHub Pages em repositório privado exige plano pago; para publicar de graça, torne o repositório público
+# ou hospede a pasta site/ em outro serviço. Ver docs/site.md.
+# Pré-requisito no GitHub: Settings → Pages → Build and deployment → Source: "GitHub Actions".
 on:
-  push:
-    branches: [main]
-    paths:
-      - "site/**"
-      - ".github/scripts/check-site.py"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:

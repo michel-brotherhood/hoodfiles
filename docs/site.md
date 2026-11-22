@@ -10,11 +10,11 @@ Página estática de pré-lançamento, em `site/`, publicada com GitHub Pages. P
 | `site/assets/css/styles.css` | Sistema de design (paleta da arte de identidade), mobile-first, `prefers-reduced-motion` |
 | `site/assets/js/app.js` | Menu móvel, link ativo, revelar ao rolar e a demonstração (sem dependências) |
 | `site/assets/img/` | Arte do hero (WebP), ícones, favicon e imagem de compartilhamento (`og.jpg`) |
-| `site/404.html` | Página de erro (usa caminhos com o prefixo `/hoodfiles/`, exigido pelo GitHub Pages) |
+| `site/404.html` | Página de erro; descobre sozinha se está na raiz do domínio ou sob `/hoodfiles/` (GitHub Pages de projeto) |
 | `design/identidade-original.webp` | Arte de identidade original (fonte dos assets; **não** é publicada) |
-| `design/make-site-assets.py` | Regenera hero, ícones e `og.jpg` a partir da arte original (Pillow) |
+| `design/make-site-assets.py` | Regenera hero, ícones, `og.jpg`, o banner do README (`docs/img/banner.png`) e a prévia social (`.github/social-preview.png`) a partir da arte original (Pillow) |
 | `.github/scripts/check-site.py` | Verificador: ligações, âncoras, `alt`/dimensões das imagens, zero dependências externas, tamanho |
-| `.github/workflows/pages.yml` | Verifica e publica `site/` na `main` |
+| `.github/workflows/pages.yml` | Verifica e publica `site/` com GitHub Pages (execução manual) |
 
 ## Identidade visual
 
@@ -30,14 +30,19 @@ python3 design/make-site-assets.py                # só se mudar a arte ou a mar
 
 O site não usa fontes, scripts nem imagens de terceiros, não coloca cookies e não rastreia visitantes. O verificador falha se alguém introduzir uma dependência externa.
 
-## Publicação (GitHub Pages)
+## Hospedagem
 
-1. Uma única vez, no GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. O workflow `Site (GitHub Pages)` publica a cada push na `main` que altere `site/` (ou manualmente, em Actions). A URL esperada é `https://michel-brotherhood.github.io/hoodfiles/`.
+O site é 100% estático (nenhuma etapa de build). Opções, da mais simples à mais independente:
 
-Pontos de atenção:
+| Opção | Custo | Repositório | Observações |
+| --- | --- | --- | --- |
+| GitHub Pages | grátis **só com repositório público**; privado exige plano pago | público | Usa o workflow `Site (GitHub Pages)`, hoje só manual. URL: `https://michel-brotherhood.github.io/hoodfiles/` |
+| Vercel (plano Hobby) | grátis, uso pessoal e não comercial | pode continuar privado | Importar o repositório, **Root Directory = `site`**, Framework = Other, sem comando de build |
+| Cloudflare Pages ou Netlify | planos gratuitos | pode continuar privado | Mesma configuração: diretório de saída `site`, sem build |
 
-- **Repositório privado:** o GitHub Pages para repositórios privados depende do plano da conta. Em plano gratuito o Pages só publica de repositório público. Tornar o repositório público é uma decisão do responsável e não foi feita.
+Depois de escolher:
+
+- Atualize a URL absoluta de `og:image` em `site/index.html` (imagem de compartilhamento) para o endereço final.
+- A página `site/404.html` funciona tanto na raiz do domínio quanto sob `/hoodfiles/`; o prefixo `SITE_PREFIX` em `.github/scripts/check-site.py` só importa para o verificador.
 - Os links "GitHub", "Status do projeto" e "Ler a especificação" apontam para o repositório; enquanto ele for privado, só abrem para quem tem acesso.
-- A imagem de compartilhamento (`og:image`) usa a URL absoluta acima; se o endereço mudar (domínio próprio, outro nome de repositório), atualize `site/index.html` e o prefixo `SITE_PREFIX` em `.github/scripts/check-site.py`.
-- O link de download ainda não existe: a seção "Download" diz "em breve". Quando houver instaladores, publique-os como Releases e aponte a seção para eles.
+- A seção "Download" diz "em breve". Quando houver instaladores, publique-os como Releases e aponte a seção para eles.
