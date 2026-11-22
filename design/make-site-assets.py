@@ -44,25 +44,35 @@ capsule(192).save(out / "icon-192.png")
 capsule(180, radius=0.0).convert("RGB").save(out / "apple-touch-icon.png")
 capsule(64).save(out / "favicon-64.png")
 
-# 3) imagem de compartilhamento 1200x630
-W, H = 1200, 630
-og = Image.new("RGB", (W, H), (0, 0, 0))
-a = art.copy(); a.thumbnail((int(H * 1.1), int(H * 1.1)), Image.LANCZOS)
-og.paste(a, (W - a.width + 120, (H - a.height) // 2 + 14))
-fade = Image.new("L", (W, H), 0); fd = ImageDraw.Draw(fade)
-for x in range(W): fd.line((x, 0, x, H), fill=int(255 * max(0, min(1, (x - 500) / 260))))
-og = Image.composite(og, Image.new("RGB", (W, H), (0, 0, 0)), fade)
+# 3) cartões com a arte à direita e o texto à esquerda: compartilhamento do site, banner do README e prévia social do GitHub
 font = next((p for p in ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf") if os.path.exists(p)), None)
-f1, f2, f3 = (ImageFont.truetype(font, n) for n in (112, 31, 25)) if font else (ImageFont.load_default(),) * 3
-glow = Image.new("RGB", (W, H), (0, 0, 0)); ImageDraw.Draw(glow).text((70, 190), "HoodFiles", font=f1, fill=(221, 27, 224))
-glow = glow.filter(ImageFilter.GaussianBlur(16)); og = Image.blend(og, Image.composite(glow, og, glow.convert("L")), 0.9)
-d = ImageDraw.Draw(og)
-d.text((70, 190), "HoodFiles", font=f1, fill=(255, 255, 255))
-d.text((74, 330), "Converta arquivos", font=f2, fill=(233, 213, 255))
-d.text((74, 372), "no ritmo do arraste.", font=f2, fill=(233, 213, 255))
-d.text((74, 430), "Local · Windows · macOS · Linux Mint", font=f3, fill=(221, 27, 224))
-d.rectangle((74, 484, 74 + 190, 488), fill=(233, 13, 53))
-d.text((74, 506), "PRÉ-LANÇAMENTO", font=f3, fill=(160, 160, 175))
-og.save(out / "og.jpg", "JPEG", quality=86, optimize=True, progressive=True)
+
+def card(W, H, title_px, tag_px, small_px, art_h, art_dx, x0, ty, fade0, fade1):
+    img = Image.new("RGB", (W, H), (0, 0, 0))
+    a = art.copy(); a.thumbnail((art_h, art_h), Image.LANCZOS)
+    img.paste(a, (W - a.width + art_dx, (H - a.height) // 2 + 14))
+    fade = Image.new("L", (W, H), 0); fd = ImageDraw.Draw(fade)
+    for x in range(W): fd.line((x, 0, x, H), fill=int(255 * max(0, min(1, (x - fade0) / fade1))))
+    img = Image.composite(img, Image.new("RGB", (W, H), (0, 0, 0)), fade)
+    f1, f2, f3 = (ImageFont.truetype(font, n) for n in (title_px, tag_px, small_px)) if font else (ImageFont.load_default(),) * 3
+    glow = Image.new("RGB", (W, H), (0, 0, 0)); ImageDraw.Draw(glow).text((x0, ty), "HoodFiles", font=f1, fill=(221, 27, 224))
+    glow = glow.filter(ImageFilter.GaussianBlur(16)); img = Image.blend(img, Image.composite(glow, img, glow.convert("L")), 0.9)
+    d = ImageDraw.Draw(img)
+    d.text((x0, ty), "HoodFiles", font=f1, fill=(255, 255, 255))
+    y = ty + int(title_px * 1.18)
+    d.text((x0 + 4, y), "Converta arquivos", font=f2, fill=(233, 213, 255))
+    d.text((x0 + 4, y + int(tag_px * 1.35)), "no ritmo do arraste.", font=f2, fill=(233, 213, 255))
+    y2 = y + int(tag_px * 2.9)
+    d.text((x0 + 4, y2), "Local · Windows · macOS · Linux Mint", font=f3, fill=(221, 27, 224))
+    d.rectangle((x0 + 4, y2 + int(small_px * 2.1), x0 + 194, y2 + int(small_px * 2.1) + 4), fill=(233, 13, 53))
+    d.text((x0 + 4, y2 + int(small_px * 2.6)), "PRÉ-LANÇAMENTO", font=f3, fill=(160, 160, 175))
+    return img
+
+card(1200, 630, 112, 31, 25, int(630 * 1.1), 120, 70, 190, 500, 260).save(out / "og.jpg", "JPEG", quality=86, optimize=True, progressive=True)
+docs_img = root / "docs" / "img"; docs_img.mkdir(parents=True, exist_ok=True)
+card(1600, 520, 104, 30, 24, int(520 * 1.3), 95, 90, 120, 640, 320).save(docs_img / "banner.png", optimize=True)
+gh = root / ".github"; gh.mkdir(exist_ok=True)
+card(1280, 640, 116, 32, 26, int(640 * 1.1), 120, 74, 192, 520, 270).save(gh / "social-preview.png", optimize=True)   # envie em Settings > General > Social preview
 
 for f in sorted(out.iterdir()): print(f"{f.name:22s} {f.stat().st_size // 1024:4d} KB")
+print("docs/img/banner.png", (docs_img / "banner.png").stat().st_size // 1024, "KB;  .github/social-preview.png", (gh / "social-preview.png").stat().st_size // 1024, "KB")

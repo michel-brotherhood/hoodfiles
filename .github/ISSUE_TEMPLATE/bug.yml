@@ -1,0 +1,26 @@
+name: Problema
+description: Algo não se comporta como a documentação diz
+labels: ["bug"]
+body:
+  - type: textarea
+    id: o-que
+    attributes:
+      label: O que aconteceu
+      description: O que você esperava e o que viu.
+    validations: { required: true }
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como reproduzir
+      placeholder: "1. …\n2. …"
+    validations: { required: true }
+  - type: input
+    id: ambiente
+    attributes:
+      label: Sistema e versão do HoodFiles / build
+    validations: { required: true }
+  - type: textarea
+    id: extra
+    attributes:
+      label: Logs ou capturas de tela
+      description: Sem caminhos completos nem dados pessoais.
