@@ -17,7 +17,8 @@ env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 concurrency:
-  group: hf-00-poc-${{ github.ref }}
+  # Execução manual e de PR não se cancelam entre si.
+  group: hf-00-poc-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -29,7 +30,8 @@ jobs:
   poc:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 40
+    # Folga para runners lentos; cada passo pesado tem o seu próprio limite.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -71,33 +73,44 @@ jobs:
 
       - name: Dependências de build do Linux
         if: matrix.os_tag == 'linux-x64'
-        shell: bash
+        timeout-minutes: 25
         working-directory: .
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev libayatana-appindicator3-dev \
-            xvfb xdotool openbox python3-gi gir1.2-gtk-3.0
+          # Já houve um `apt` parado por 34 min num runner: tentativas curtas, com limite e reparo do dpkg.
+          pkgs="build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev libayatana-appindicator3-dev xvfb xdotool openbox python3-gi gir1.2-gtk-3.0"
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Dpkg::Use-Pty=0"
+          ok=0
+          for attempt in 1 2 3; do
+            echo "::group::apt tentativa $attempt"
+            sudo dpkg --configure -a || true
+            if sudo timeout 300 apt-get $apt_opts update \
+               && sudo timeout 600 apt-get $apt_opts install -y --no-install-recommends $pkgs; then
+              ok=1; echo "::endgroup::"; break
+            fi
+            echo "::endgroup::"
+            echo "::warning::apt falhou ou estourou o tempo (tentativa $attempt de 3)"
+            sleep 15
+          done
+          [ "$ok" = 1 ] || { echo "::error::não foi possível instalar as dependências de build do Linux"; exit 1; }
 
       - name: Formatação
+        timeout-minutes: 10
         run: cargo fmt --all -- --check
 
       - name: Clippy
+        timeout-minutes: 25
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       - name: Testes do núcleo
+        timeout-minutes: 25
         run: cargo test --workspace --locked
 
       - name: Build release (nativo)
+        timeout-minutes: 35
         run: cargo build --release -p hf-poc-app --locked
 
-      - name: Smoke Linux (Xvfb; arraste X11 sintético)
-        if: matrix.os_tag == 'linux-x64'
-        env:
-          BIN: target/release/hf-poc-app
-        run: scripts/linux-smoke.sh
-
       - name: Empacotar build de teste sem assinatura
+        timeout-minutes: 10
         run: scripts/package-ci.sh "${{ matrix.os_tag }}" "${HEAD_SHA::7}"
 
       - uses: actions/upload-artifact@v4
@@ -105,4 +118,27 @@ jobs:
           name: hf-poc-${{ matrix.os_tag }}-SEM-ASSINATURA-${{ env.HEAD_SHA }}
           path: poc/native-interaction/dist/*
           if-no-files-found: error
-          retention-days: 14
+          # 60 dias: o pacote de 14 dias expirou antes do teste no Mint.
+          retention-days: 60
+
+      - name: Resumo (como baixar)
+        run: |
+          {
+            echo "### ${{ matrix.name }}"
+            echo "Artifact: \`hf-poc-${{ matrix.os_tag }}-SEM-ASSINATURA-${HEAD_SHA}\` (build de TESTE, sem assinatura/notarização; expira em 60 dias)."
+            echo "Baixe em **Summary → Artifacts** desta execução. Instruções de uso: \`LEIA-ME.md\` dentro do pacote."
+            echo
+            echo "SHA-256 dos arquivos:"
+            echo '```'
+            (cd dist && find . -type f \( -name '*.tar.gz' -o -name '*.exe' -o -name 'SHA256SUMS.txt' \) -exec sha256sum {} + 2>/dev/null || find . -type f -exec shasum -a 256 {} +)
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # O smoke vem DEPOIS do upload: um smoke instável não impede mais a entrega do pacote
+      # (o job continua vermelho, e o resultado fica visível).
+      - name: Smoke Linux (Xvfb; arraste X11 sintético)
+        if: matrix.os_tag == 'linux-x64'
+        timeout-minutes: 15
+        env:
+          BIN: target/release/hf-poc-app
+        run: scripts/linux-smoke.sh
