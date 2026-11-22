@@ -104,4 +104,4 @@ As regras de trabalho estão em [`CONTRIBUTING.md`](CONTRIBUTING.md). A ajuda ma
 
 ## Licença
 
-Ainda não definida. Até lá, todos os direitos reservados.
+**Todos os direitos reservados.** O código está público apenas para consulta e teste; não é código aberto. Copiar, republicar, criar derivados, uso comercial e reutilizar o nome ou a arte exigem autorização por escrito. Veja [`LICENSE`](LICENSE).

@@ -1,0 +1,38 @@
+HoodFiles — Licença de uso restrito (código-fonte disponível apenas para leitura)
+
+Copyright (c) 2026 michel-brotherhood. Todos os direitos reservados.
+
+Este repositório (código-fonte, documentação, arte de identidade, imagens, textos e demais arquivos,
+em conjunto "o Software") é público apenas para consulta. Não é software livre nem de código aberto.
+
+1. O que é permitido
+   a) Ler e navegar pelo repositório.
+   b) Clonar ou baixar uma cópia para avaliação pessoal e privada, e para compilar e executar a prova
+      técnica no seu próprio computador, com o fim de testar e relatar resultados ao projeto.
+   c) Abrir issues e pull requests. Ao enviar uma contribuição, você declara ter o direito de enviá-la e
+      concede ao titular licença irrevogável, mundial e gratuita para usá-la, modificá-la e distribuí-la
+      como parte do Software.
+
+2. O que é proibido sem autorização prévia e por escrito do titular
+   a) Copiar, republicar, hospedar ou distribuir o Software, no todo ou em parte, em qualquer meio.
+   b) Criar obras derivadas, incluindo forks públicos, reimplementações baseadas neste código e produtos
+      ou serviços que o incorporem.
+   c) Vender, sublicenciar, alugar ou usar o Software, ou parte dele, com finalidade comercial.
+   d) Usar o nome "HoodFiles", o logotipo (a cápsula) e a arte de identidade para identificar outro
+      projeto, produto ou serviço, ou de forma que sugira vínculo ou endosso.
+   e) Remover ou alterar este aviso de direitos autorais e esta licença.
+   f) Usar o conteúdo do repositório para treinar modelos de aprendizado de máquina destinados a
+      reproduzi-lo.
+
+3. A arte de identidade (design/, site/assets/img/, docs/img/, .github/social-preview.png) não pode ser
+   reutilizada em nenhuma hipótese sem autorização.
+
+4. Dependências de terceiros continuam sob as suas próprias licenças; esta licença não as altera.
+
+5. O Software é fornecido "no estado em que se encontra", sem garantia de qualquer tipo. O titular não
+   responde por danos decorrentes do seu uso.
+
+6. A violação destes termos encerra automaticamente qualquer permissão aqui concedida. Para pedir
+   autorização, abra uma issue no repositório.
+
+Esta licença será substituída quando o titular escolher uma licença definitiva.

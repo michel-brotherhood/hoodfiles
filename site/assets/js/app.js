@@ -5,7 +5,6 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ----- Menu móvel ----- */
-  const header = document.querySelector('.site-header');
   const toggle = document.querySelector('[data-nav-toggle]');
   const nav = document.querySelector('[data-nav]');
   if (toggle && nav) {
@@ -21,13 +20,6 @@
       if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setNav(false); toggle.focus(); }
     });
     window.matchMedia('(min-width: 861px)').addEventListener('change', (e) => { if (e.matches) setNav(false); });
-  }
-
-  /* ----- Sombra do cabeçalho ao rolar ----- */
-  if (header) {
-    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
   }
 
   /* ----- Link ativo conforme a seção ----- */

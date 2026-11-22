@@ -2,7 +2,7 @@
 """Gera os assets do site a partir da arte de identidade (design/identidade-original.webp).
 Uso: python3 design/make-site-assets.py   (requer Pillow). Escreve em site/assets/img/.
 
-A arte tem fundo #000 puro; no site ela é fundida ao brilho com mix-blend-mode: screen (ver styles.css).
+A arte original tem fundo #000 puro; o hero do site usa uma versão com fundo transparente (alfa derivado da luminância).
 Paleta: violeta #9506d0/#c00fe3, magenta #dd1be0/#e21779, vermelho #e90d35, lilás #e9d5ff."""
 import os, pathlib
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -12,10 +12,26 @@ src = Image.open(root / "design" / "identidade-original.webp").convert("RGB")
 out = root / "site" / "assets" / "img"
 out.mkdir(parents=True, exist_ok=True)
 
-# 1) arte recortada ao conteúdo (com folga), em duas larguras
+# 1) arte recortada ao conteúdo (com folga), em duas larguras, com fundo transparente.
+# O preto vira alfa: alfa = max(R,G,B) e a cor é "desmultiplicada" (como o mix-blend-mode: screen sobre preto),
+# então o brilho e as linhas de varredura esmaecem em transparência e a arte funciona sobre qualquer fundo.
 art = src.crop((70, 160, 1185, 1085))
-art.save(out / "hero-1115.webp", "WEBP", quality=84, method=6)
-art.resize((640, int(640 * art.height / art.width)), Image.LANCZOS).save(out / "hero-640.webp", "WEBP", quality=82, method=6)
+
+def black_to_alpha(im, floor=4):
+    px = im.load(); w, h = im.size
+    out = Image.new("RGBA", (w, h))
+    po = out.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b = px[x, y]; a = max(r, g, b)
+            if a <= floor: po[x, y] = (0, 0, 0, 0); continue
+            k = 255 / a
+            po[x, y] = (min(255, round(r * k)), min(255, round(g * k)), min(255, round(b * k)), a)
+    return out
+
+art_a = black_to_alpha(art)
+art_a.save(out / "hero-1115.webp", "WEBP", quality=88, alpha_quality=92, method=6)
+art_a.resize((640, int(640 * art.height / art.width)), Image.LANCZOS).save(out / "hero-640.webp", "WEBP", quality=86, alpha_quality=90, method=6)
 
 # 2) cápsula (marca): desenhada em supersampling, magenta + lilás
 def capsule(size, bg=True, radius=0.22):
