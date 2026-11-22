@@ -1,6 +1,6 @@
-# HoodFiles
+# Contribuindo com o HoodFiles
 
-Responda em português. Leia `docs/spec.md`, `docs/roadmap.md` e `docs/status.md` antes de trabalhar. Consulte os demais documentos conforme a tarefa. Este arquivo contém instruções; não significa que a stack ou os comandos já existam.
+Idioma: português (documentação, interface e mensagens). Leia `docs/spec.md`, `docs/roadmap.md` e `docs/status.md` antes de trabalhar; consulte os demais documentos conforme a tarefa. Este arquivo descreve regras do projeto; não significa que a stack ou os comandos já existam.
 
 ## Objetivo
 
@@ -10,15 +10,15 @@ Criar um utilitário desktop de conversão e manipulação local de arquivos par
 
 Windows x64, macOS Apple silicon e Linux Mint (x86_64). Linux Mint em sessão X11 é a referência inicial; Wayland não está avaliado e não é prometido. Nenhum resultado de uma plataforma vale para outra. Container Ubuntu/Xvfb e CI não substituem o Mint real.
 
-## Execução
+## Como trabalhar
 
-- Comece por HF-00. Não implemente o produto inteiro num único pedido.
-- Antes de cada tarefa, apresente um plano curto, arquivos envolvidos e validação. Prossiga nas tarefas autorizadas; peça decisão somente quando uma ambiguidade mudar o produto, houver ação destrutiva ou gasto/serviço externo novo.
-- Não reduza a experiência global para um simples dropzone sem registrar a limitação e obter decisão do responsável.
-- Escolha rotinas pequenas, contratos explícitos e dependências justificadas. Pesquise documentação oficial e fixe versões compatíveis nos manifests e lockfiles.
-- Não invente APIs, resultados de comandos, métricas, suporte a formatos ou testes em sistemas indisponíveis.
-- Ao finalizar: revisar o diff, executar checks relevantes e atualizar `docs/status.md` com evidências e próximo passo.
-- Faça commits locais pequenos se houver repositório; não publique, faça push ou release sem instrução do responsável.
+- Siga o roadmap por etapas, começando por HF-00. Não implemente o produto inteiro de uma vez.
+- Antes de cada tarefa, registre um plano curto: arquivos envolvidos e validação. Peça decisão somente quando uma ambiguidade mudar o produto, houver ação destrutiva ou gasto/serviço externo novo.
+- Não reduza a experiência global a um simples dropzone sem registrar a limitação e obter decisão do responsável.
+- Prefira rotinas pequenas, contratos explícitos e dependências justificadas. Consulte a documentação oficial e fixe versões compatíveis nos manifests e lockfiles.
+- Não registre APIs, resultados de comandos, métricas, suporte a formatos ou testes que não foram verificados, sobretudo em sistemas indisponíveis.
+- Ao finalizar: revise o diff, execute os checks relevantes e atualize `docs/status.md` com evidências e próximo passo.
+- Faça commits pequenos. Publicação externa (release, site, serviços) e gasto exigem decisão do responsável.
 
 ## Arquitetura candidata
 

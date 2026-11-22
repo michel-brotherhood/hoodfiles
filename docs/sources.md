@@ -4,12 +4,12 @@ Referências consultadas em 22/10/2026. São fontes sobre produto e capacidades 
 
 ## Guia fornecido
 
-“Guia — Do zero ao ar com IA”, Rafael Dias, edição out/2026, enviado pelo responsável. Foram usados os princípios de especificação antes de implementar, contexto em CLAUDE.md, tarefas pequenas, revisão, testes e preparação do lançamento. Este pacote é uma adaptação original; não redistribui o PDF.
+“Guia — Do zero ao ar com IA”, Rafael Dias, edição out/2026, enviado pelo responsável. Foram usados os princípios de especificação antes de implementar, contexto permanente em um documento de regras (`CONTRIBUTING.md`), tarefas pequenas, revisão, testes e preparação do lançamento. Este pacote é uma adaptação original; não redistribui o PDF.
 
 | Tema do guia | Adaptação no HoodFiles |
 | --- | --- |
 | Ideia e validação | Público, hipótese e beta com operações reais |
-| Spec e Claude Code | Documentos, tarefas e prompts de execução |
+| Spec e execução | Documentos, tarefas e roteiros de execução |
 | Deploy web | Builds e instaladores por sistema |
 | Banco/login | Configuração local; sem autenticação obrigatória |
 | Segurança web | IPC, filesystem, engines e distribuição |

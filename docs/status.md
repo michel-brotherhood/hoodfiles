@@ -74,7 +74,7 @@ Próxima tarefa elegível: responsável executa ROTEIRO-N03-N06.md em ambos os s
 ```text
 Tarefa: incluir Linux Mint; investigar arraste externo falho no Linux; build/CI Linux
 Estado: em andamento (gate BLOQUEADO; exige Windows, macOS e Linux Mint)
-Alterações: docs (spec, arquitetura, roadmap, testes, distribuição, ADR, README, CLAUDE.md) com Linux Mint oficial; platform/linux.rs registra distro/sessão/desktop; job Linux no CI (ubuntu-24.04) com smoke Xvfb; pacote linux-x64 com DEPENDENCIAS-RUNTIME.txt e linux-run-checks.sh; roteiro com seção Mint
+Alterações: docs (spec, arquitetura, roadmap, testes, distribuição, ADR, README, regras do projeto) com Linux Mint oficial; platform/linux.rs registra distro/sessão/desktop; job Linux no CI (ubuntu-24.04) com smoke Xvfb; pacote linux-x64 com DEPENDENCIAS-RUNTIME.txt e linux-run-checks.sh; roteiro com seção Mint
 Decisões e evidências: causa do defeito original CONFIRMADA = bug do app (on_webview_event em WebviewWindow nunca dispara; correto é on_window_event), não do wry/WebKitGTK; hipótese info==2 REFUTADA com wry instrumentado. Vale também para Windows/macOS: builds anteriores tinham o defeito. Intermitência residual (~8% com outra janela do app no caminho; ~0,6% fora; também com a fonte iniciada depois do overlay) SEM causa isolada; GTK puro 0/40 não reproduziu. Fluxo real sintético (atalho durante o arraste): 39/40. Nenhuma dependência trocada.
 Comandos e resultados (container Ubuntu 24.04, Xvfb): ver docs/poc-native-interaction.md seção 4.1
 Testes nativos por SO: Windows PENDENTE; macOS PENDENTE; Linux Mint PENDENTE (o container Ubuntu NÃO é Mint)
